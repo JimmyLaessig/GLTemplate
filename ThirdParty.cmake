@@ -58,3 +58,39 @@ if(NOT glm_POPULATED)
   FetchContent_Populate(glm)
   message(STATUS "Cloning glm:  https://github.com/g-truc/glm.git - done")
 endif()
+
+
+##################################################
+# Assimp
+##################################################
+
+FetchContent_Declare(
+  assimp
+  GIT_REPOSITORY git@github.com:assimp/assimp.git
+  GIT_TAG v5.0.0
+)
+
+FetchContent_GetProperties(assimp)
+if(NOT assimp_POPULATED)
+  message(STATUS "Cloning assimp:  git@github.com:assimp/assimp.git")
+  FetchContent_Populate(assimp)
+  message(STATUS "Cloning assimp:  git@github.com:assimp/assimp.git - done")
+endif()
+
+
+##################################################
+# Imgui
+##################################################
+
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY git@github.com:ocornut/imgui.git
+  GIT_TAG v1.74
+)
+
+FetchContent_GetProperties(imgui)
+if(NOT imgui_POPULATED)
+  message(STATUS "Cloning imgui:  git@github.com:ocornut/imgui.git")
+  FetchContent_Populate(imgui)
+  message(STATUS "Cloning imgui:  git@github.com:ocornut/imgui.git - done")
+endif()

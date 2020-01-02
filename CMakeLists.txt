@@ -11,22 +11,44 @@ include(ThirdParty.cmake)
 
 find_package(OpenGL REQUIRED)
 
+# Whenever this glob's value changes, cmake will rerun and update the build with the
+# new/removed files.
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.h")
+
+# Whenever this glob's value changes, cmake will rerun and update the build with the
+# new/removed files.
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS "src/*.cpp")
+
 ### build target 
 set (SOURCES
-        src/main.cpp
-	)
+	${sources} 
+	${headers}
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp
+        ${imgui_SOURCE_DIR}/examples/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
+)
 
 
 add_executable(${PROJECT} ${SOURCES})
 
+set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
+
+
+
 add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
 add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR})
+add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR})
 
 target_include_directories(${PROJECT} PUBLIC
     include
 	${glfw_SOURCE_DIR}/include/GLFW
 	${glew_SOURCE_DIR}/include
-	${glm_SOURCE_DIR}
+	${assimp_SOURCE_DIR}/include
+    	${glm_SOURCE_DIR}
+    	${imgui_SOURCE_DIR}
 )
 
 
@@ -35,9 +57,9 @@ set(LIBRARIES
     ${GLFW_LIBRARIES}
     libglew_static
     OpenGL32
+	assimp
 )
 target_link_libraries(${PROJECT} ${LIBRARIES})
-
 
 #add_custom_command(TARGET ${PROJECT} POST_BUILD        
 #    COMMAND ${CMAKE_COMMAND} -E copy_if_different  		
