@@ -9,6 +9,15 @@
 
 struct SubMeshVertexData
 {
+	SubMeshVertexData() = default;
+
+	SubMeshVertexData(const SubMeshVertexData& other);
+
+	SubMeshVertexData(SubMeshVertexData&& other);
+
+	SubMeshVertexData& operator=(const SubMeshVertexData& other);
+
+	SubMeshVertexData& operator=(SubMeshVertexData&& other);
 
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
@@ -48,6 +57,13 @@ public:
      */
     void setVertexData(const SubMeshVertexData& vertexData);
     
+	/**
+	 * @brief Set the Vertex Data object
+	 *
+	 * @param vertexData
+	 */
+	void setVertexData(SubMeshVertexData&& vertexData);
+
     /**
      * @brief Set the Vertex Data object
      * 
@@ -100,6 +116,8 @@ private:
     Material* material;
 	
 	std::vector<GLuint> VBOs;
+
+public: 
 	GLuint VAO = 0;
 
 };

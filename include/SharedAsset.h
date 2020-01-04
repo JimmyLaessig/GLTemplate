@@ -16,7 +16,7 @@ public:
 	template<class T>
 	static std::shared_ptr<T> New(const std::string& ID)
 	{
-		return ConsctructSharedAsset(ID);
+		return ConsctructSharedAsset<T>(ID);
 	}
 
 	/**

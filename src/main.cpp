@@ -12,6 +12,8 @@
 #include <iostream>
 #include <functional>
 #include <numeric>
+#include "CameraController.h"
+
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
@@ -29,6 +31,11 @@
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
 #include<string>
+
+#include "glm/gtx/string_cast.hpp"
+#include "Transform.h"
+#include "Camera.h"
+#define GLM_FORCE_RADIANS
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
 // Your own project should not be affected, as you are likely to link with a newer binary of GLFW that is adequate for your version of Visual Studio.
@@ -70,32 +77,9 @@ std::vector <std::function<void(int key, int scanCode, bool bShift, bool bAlt, b
 std::vector <std::function<void(int key, int scanCode, bool bShift, bool bAlt, bool bCtrl)>> keyRepeatCallbacks;
 
 
-
-
-int numWays(int N, const std::vector<int>& X)
-{
-	if (N == 0)
-	{
-		return 1;
-	}
-	
-	return std::accumulate(X.begin(), X.end(), 0, [&](int acc, int x) 
-	{
-		if (N >= x)
-		{
-			return acc + numWays(N - x, X);
-		}
-		return acc; 
-	});
-}
-
-
 int main(int, char**)
 {
-	std::cout << numWays(4, { 1, 2 }) << std::endl;
-	std::cout << numWays(1, { 1, 2 }) << std::endl;
-
-	/*
+	
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -173,23 +157,22 @@ int main(int, char**)
 			default:
 				break;
 		}
-		
 	});
 	
     // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //IMGUI_CHECKVERSION();
+   //ImGui::CreateContext();
+    //ImGuiIO& io = ImGui::GetIO(); (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    //ImGui_ImplGlfw_InitForOpenGL(window, true);
+   // ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -228,16 +211,134 @@ int main(int, char**)
 
 
 	
-	auto shader = SharedAsset::FromFile<GLSLShader>("effect.glsl");
+	//auto shader = SharedAsset::FromFile<GLSLShader>("effect.glsl");
 
-	shader->updateGpuMemory();
-	auto mesh = SharedAsset::FromFile<Mesh>("sibenik-cathedral-vray.obj");
+	auto shaderRed = SharedAsset::New < GLSLShader>("red");
+	{
+		ShaderStageData shaderData;
+		shaderData.vertexShaderCode =
+			"#version 410 core\n"
+			"layout(location = 0) in vec3 vPosition;\n"
+			"uniform mat4 WorldViewProjectionMatrix;\n"
+			"void main()\n"
+			"{\n"
+			"    gl_Position =  WorldViewProjectionMatrix * vec4(vPosition, 1.0f);\n"
+			"}\n";
+		shaderData.fragmentShaderCode =
+			"#version 410 core\n"
+			"layout(location = 0) in vec3 position;\n"
+			"void main()\n"
+			"{\n"
+			"    gl_FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+			"}\n";
+
+		shaderRed->setShaderStageData(shaderData);
+	}
+
+	auto shaderBlue = SharedAsset::New < GLSLShader>("blue");
+	{
+		ShaderStageData shaderData;
+		shaderData.vertexShaderCode =
+			"#version 410 core\n"
+			"layout(location = 0) in vec3 vPosition;\n"
+			"uniform mat4 WorldViewProjectionMatrix;\n"
+			"layout(location = 0) out vec3 position;"
+			"void main()\n"
+			"{\n"
+			"    gl_Position =  WorldViewProjectionMatrix * vec4(vPosition, 1.0f);\n"
+			"}\n";
+		shaderData.fragmentShaderCode =
+			"#version 410 core\n"
+			"void main()\n"
+			"{\n"
+			"    gl_FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n"
+			"}\n";
+
+		shaderBlue->setShaderStageData(shaderData);
+	}
 	
+	auto mesh = SharedAsset::New<Mesh>("asdasdasd");// "sibenik-cathedral-vray.obj");
+
+	mesh->subMeshes = std::vector<SubMesh>(1);
+	
+	SubMeshVertexData data;
+	data.positions = {
+	   {-1.0, -1.0,  2.0},
+	   { 1.0, -1.0,  2.0},
+	   { 1.0,  1.0,  2.0},
+	   {-1.0,  1.0,  2.0},
+	   {-1.0, -1.0, -2.0},
+	   { 1.0, -1.0, -2.0},
+	   { 1.0,  1.0, -2.0},
+	   {-1.0,  1.0, -2.0}
+	};
+	data.indices = {
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// right
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// left
+		4, 0, 3,
+		3, 7, 4,
+		// bottom
+		4, 5, 1,
+		1, 0, 4,
+		// top
+		3, 2, 6,
+		6, 7, 3
+	};
+
+	data.normals	= std::vector<glm::vec3>(8);
+	data.tangents	= std::vector<glm::vec3>(8);
+	data.bitangents = std::vector<glm::vec3>(8);
+	data.colors		= std::vector<glm::vec4>(8);
+	data.uvs.push_back(std::vector<glm::vec3>(8));
+	mesh->subMeshes[0].setVertexData(data);
+
+
+	shaderRed->updateGpuMemory();
+	shaderBlue->updateGpuMemory();
+
 	for (auto& mesh : mesh->subMeshes)
 	{
 		mesh.updateGpuMemory();
 	}
 
+
+	float lastTime = glfwGetTime();
+	float angle = 0;
+	
+	Transform transformRed;
+	Transform transformBlue;
+	Camera camera;
+	CameraController controller;
+	camera.transform.setPosition(glm::vec3(-10, 0, 0));
+	
+	glm::vec3 pos(0);
+	
+/*
+	keyDownCallbacks.push_back([&](int key, int scanCode, bool bShift, bool bAlt, bool bCtrl) 
+	{
+		if (key == GLFW_KEY_W)
+		{
+			pos += glm::vec3(1, 0, 0);
+		}
+		if (key == GLFW_KEY_S)
+		{
+			pos += glm::vec3(-1, 0, 0);
+		}
+	});
+*/
+	// auto view =  (glm::lookAtLH(glm::vec3(-20, 0, 0), glm::vec3( 0, 0, 0), glm::vec3( 0, 1, 0)));
+	Transform animTransform;
+
+	transformRed.setPosition({ 0, -3, 0 });
+	transformBlue.setPosition({ 0, 3, 0 });
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -247,24 +348,70 @@ int main(int, char**)
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
-
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        //ImGui_ImplOpenGL3_NewFrame();
+       // ImGui_ImplGlfw_NewFrame();
+       // ImGui::NewFrame();
 
-        PerformanceInfo info;
+       // PerformanceInfo info;
 
-        PerformanceOverlay(info);
+      //  PerformanceOverlay(info);
         
 
-        ImGui::Render();
+		double time = glfwGetTime();
+		double deltaTime = time - lastTime;
+		lastTime = time;
+
+		
+		controller.update(deltaTime);
+		controller.camera = &camera;
+		controller.window = window;
+		angle += deltaTime * 45;  // 45° per second
+
+
+
+
+		
+
+        //ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		//glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+        //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glm::mat4 projMatrix = glm::perspective(glm::radians(90.0f), (float)display_w / (float)display_h, 0.1f, 1000.0f);
+
+		
+		std::shared_ptr<GLSLShader> shaders[2]{ shaderRed, shaderBlue };
+		Transform* transforms[2]{ &transformRed, &transformBlue };
+		// worldViewProjectionMatrix = anim;
+		auto view = camera.getViewMatrix();
+		for (int i : { 0, 1 })
+		{
+			auto worldViewProjectionMatrix = projMatrix * view * transforms[i]->getLocalToWorldMatrix();
+			shaders[i]->bind();
+			glUniformMatrix4fv(glGetUniformLocation(shaders[i]->programHandle, "WorldViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(worldViewProjectionMatrix));
+
+
+			for (auto&subMesh : mesh->subMeshes)
+			{
+				glBindVertexArray(subMesh.VAO);
+				glDrawElements(
+					GL_TRIANGLES,										// mode
+					(GLsizei)subMesh.getVertexData().indices.size(),    // count
+					GL_UNSIGNED_INT,   // type
+					(void*)0           // element array buffer offset
+				);
+			}
+		}
+
+		
+		
+		auto error = glGetError();
 
         glfwSwapBuffers(window);
     }
@@ -272,14 +419,13 @@ int main(int, char**)
 	//SharedAsset<GLSLShader>::AssetCache.clear();
 
     // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+  //  ImGui_ImplOpenGL3_Shutdown();
+  //  ImGui_ImplGlfw_Shutdown();
+  //  ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();
 
     
-	*/
 	return 0;
 }

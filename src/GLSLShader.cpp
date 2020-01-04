@@ -120,3 +120,61 @@ bool GLSLShader::reload()
 {
 	return false;
 }
+
+ShaderStageData::ShaderStageData(
+	const std::string & vertexShaderCode, 
+	const std::string & fragmentShaderCode, 
+	const std::string & geometryShaderCode, 
+	const std::string & tessellationEvalShaderCode, 
+	const std::string & tessellationControlShaderCode, 
+	const std::string & computeShaderCode)
+	: vertexShaderCode(vertexShaderCode),
+	fragmentShaderCode(fragmentShaderCode),
+	geometryShaderCode(geometryShaderCode),
+	tessellationEvalShaderCode(tessellationEvalShaderCode),
+	tessellationControlShaderCode(tessellationControlShaderCode),
+	computeShaderCode(computeShaderCode)
+{}
+
+ShaderStageData::ShaderStageData(const ShaderStageData & other)
+{
+	this->vertexShaderCode = other.vertexShaderCode;
+	this->fragmentShaderCode = other.fragmentShaderCode;
+	this->geometryShaderCode = other.geometryShaderCode;
+	this->tessellationControlShaderCode = other.tessellationControlShaderCode;
+	this->tessellationEvalShaderCode = other.tessellationEvalShaderCode;
+	this->computeShaderCode = other.computeShaderCode;
+}
+
+ShaderStageData::ShaderStageData(ShaderStageData && other)
+{
+	this->vertexShaderCode				= std::move(other.vertexShaderCode);
+	this->fragmentShaderCode			= std::move(other.fragmentShaderCode);
+	this->geometryShaderCode			= std::move(other.geometryShaderCode);
+	this->tessellationControlShaderCode = std::move(other.tessellationControlShaderCode);
+	this->tessellationEvalShaderCode	= std::move(other.tessellationEvalShaderCode);
+	this->computeShaderCode				= std::move(other.computeShaderCode);
+}
+
+ShaderStageData & ShaderStageData::operator=(const ShaderStageData & other)
+{
+	this->vertexShaderCode				= other.vertexShaderCode;
+	this->fragmentShaderCode			= other.fragmentShaderCode;
+	this->geometryShaderCode			= other.geometryShaderCode;
+	this->tessellationControlShaderCode = other.tessellationControlShaderCode;
+	this->tessellationEvalShaderCode	= other.tessellationEvalShaderCode;
+	this->computeShaderCode				= other.computeShaderCode;
+	return *this;
+}
+
+ShaderStageData & ShaderStageData::operator=(ShaderStageData && other)
+{
+	this->vertexShaderCode = std::move(other.vertexShaderCode);
+	this->fragmentShaderCode = std::move(other.fragmentShaderCode);
+	this->geometryShaderCode = std::move(other.geometryShaderCode);
+	this->tessellationControlShaderCode = std::move(other.tessellationControlShaderCode);
+	this->tessellationEvalShaderCode = std::move(other.tessellationEvalShaderCode);
+	this->computeShaderCode = std::move(other.computeShaderCode);
+
+	return *this;
+}

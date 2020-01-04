@@ -19,6 +19,7 @@ void SubMesh::setVertexData(const SubMeshVertexData & vertexData)
 	this->vertexData.normals	= vertexData.normals;
 	this->vertexData.tangents	= vertexData.tangents;
 	this->vertexData.bitangents = vertexData.bitangents;
+	this->vertexData.colors		= vertexData.colors;
 	this->vertexData.uvs		= vertexData.uvs;
 	this->vertexData.indices	= vertexData.indices;
 
@@ -31,8 +32,18 @@ void SubMesh::setVertexData(const SubMeshVertexData & vertexData)
 	assert(this->vertexData.normals.size() == numVertices);
 	assert(this->vertexData.tangents.size() == numVertices);
 	assert(this->vertexData.bitangents.size() == numVertices);
+	assert(this->vertexData.colors.size() == numVertices);
 	for (auto& uvSet : this->vertexData.uvs){assert(uvSet.size() == numVertices);}
 
+	getResourceLock().unlock();
+
+	markOutdated();
+}
+
+void SubMesh::setVertexData(SubMeshVertexData && vertexData)
+{
+	getResourceLock().lock();
+	this->vertexData = std::move(vertexData);
 	getResourceLock().unlock();
 
 	markOutdated();
@@ -126,15 +137,16 @@ void SubMesh::updateGpuMemory_Internal()
 	// Fill Position Buffer
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), vertexData.positions.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.positions[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
 	}
+	
 	// Fill Normal Buffer
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), vertexData.normals.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.normals[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
 		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
@@ -142,7 +154,7 @@ void SubMesh::updateGpuMemory_Internal()
 	// Fill Tangent Buffer
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), vertexData.tangents.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.tangents[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
 		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
@@ -150,7 +162,7 @@ void SubMesh::updateGpuMemory_Internal()
 	// Fill Bitangent Buffer
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), vertexData.bitangents.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3),&vertexData.bitangents[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
 		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
@@ -158,7 +170,7 @@ void SubMesh::updateGpuMemory_Internal()
 	// Fill Color Buffer
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec4), vertexData.colors.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec4), &vertexData.colors[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
 		glVertexAttribPointer(bufferIndex, 4, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
@@ -167,16 +179,20 @@ void SubMesh::updateGpuMemory_Internal()
 	for (auto& uvs : vertexData.uvs)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec2), uvs.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &uvs[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
 		glVertexAttribPointer(bufferIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
 	}
+	
 	// Fill Index Buffer
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexData.indices.size() * sizeof(unsigned int), vertexData.indices.data(), GL_STATIC_DRAW);
-	}	
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexData.indices.size() * sizeof(unsigned int), &vertexData.indices[0], GL_STATIC_DRAW);
+	}
+	
+
+	glBindVertexArray(0);
 }
 
 
@@ -219,7 +235,7 @@ bool Mesh::load()
 			subMesh.vertexData.bitangents.resize(aiMesh->mNumVertices);
 			subMesh.vertexData.colors.resize(aiMesh->mNumVertices);
 			subMesh.vertexData.uvs.resize(aiMesh->GetNumUVChannels());
-			subMesh.vertexData.indices.resize(aiMesh->mNumFaces * 3);
+			subMesh.vertexData.indices.resize(aiMesh->mNumFaces * 3u);
 			subMesh.name = aiMesh->mName.C_Str();
 			
 			for (auto& uvs : subMesh.vertexData.uvs)
@@ -264,7 +280,7 @@ bool Mesh::load()
 			populate += sw.elapsed();
 		}
 
-		std::cout << "populate took " << populate << "ms. " << std::endl;
+		//std::cout << "populate took " << populate << "ms. " << std::endl;
 		return true;	
 	}	
 	else
@@ -278,4 +294,56 @@ bool Mesh::load()
 bool Mesh::reload()
 {
 	return true;
+}
+
+
+SubMeshVertexData::SubMeshVertexData(const SubMeshVertexData & other)
+{
+	this->positions		= other.positions;
+	this->normals		= other.normals;
+	this->tangents		= other.tangents;
+	this->bitangents	= other.bitangents;
+	this->colors		= other.colors;
+	this->uvs			= other.uvs;
+	this->indices		= other.indices;
+}
+
+
+SubMeshVertexData::SubMeshVertexData(SubMeshVertexData && other)
+{
+	this->positions		= std::move(other.positions);
+	this->normals		= std::move(other.normals);
+	this->tangents		= std::move(other.tangents);
+	this->bitangents	= std::move(other.bitangents);
+	this->colors		= std::move(other.colors);
+	this->uvs			= std::move(other.uvs);
+	this->indices		= std::move(other.indices);
+}
+
+
+SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other)
+{
+	this->positions = other.positions;
+	this->normals = other.normals;
+	this->tangents = other.tangents;
+	this->bitangents = other.bitangents;
+	this->colors = other.colors;
+	this->uvs = other.uvs;
+	this->indices = other.indices;
+
+	return *this;
+}
+
+
+SubMeshVertexData & SubMeshVertexData::operator=(SubMeshVertexData && other)
+{
+	this->positions		= std::move(other.positions);
+	this->normals		= std::move(other.normals);
+	this->tangents		= std::move(other.tangents);
+	this->bitangents	= std::move(other.bitangents);
+	this->colors		= std::move(other.colors);
+	this->uvs			= std::move(other.uvs);
+	this->indices		= std::move(other.indices);
+
+	return *this;
 }
