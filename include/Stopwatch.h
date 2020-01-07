@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <chrono>
+#include <string>
 
 
 namespace stopwatch {
@@ -104,13 +105,13 @@ namespace stopwatch {
 	constexpr Stopwatch::TimeFormat seconds = Stopwatch::TimeFormat::SECONDS;
 
 
-	std::string show_times(const std::vector<std::uint64_t>& times) {
+	/*std::string show_times(const std::vector<std::uint64_t>& times) {
 		std::string result("{");
 		for (const auto& t : times) {
 			result += std::to_string(t) + ",";
 		}
 		result.back() = static_cast<char>('}');
 		return result;
-	}
+	}*/
 
 } //namespace stopwatch

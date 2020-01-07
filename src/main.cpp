@@ -6,14 +6,17 @@
 #include "examples/imgui_impl_glfw.h"
 #include "examples/imgui_impl_opengl3.h"
 #include <stdio.h>
-
+#include "Stopwatch.h"
 #include "GLSLShader.h"
 #include "Mesh.h"
 #include <iostream>
 #include <functional>
 #include <numeric>
 #include "CameraController.h"
-
+#include "GpuResourceBackend.h"
+#include <set>
+#include "Renderer.h"
+#include "Input.h"
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
 //  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
@@ -57,24 +60,36 @@ struct PerformanceInfo
     unsigned int memoryUsageCPU;
     unsigned int numPrimitives;
     unsigned int numDrawCalls;
+
+	float time0;
+	float time1;
+	float time2;
+	float time3;
+	float time4;
 };
+
 
 void PerformanceOverlay(const PerformanceInfo& info)
 {
     ImGui::Begin("Stats");  
-    ImGui::Text("Frame Time(GPU): %.3f ms", info.frameTimeGPU / 1000.0f);
-    ImGui::Text("Frame Time(CPU): %.3f ms", info.frameTimeCPU / 1000.0f);
+	ImGui::Text("time0: %.5f ms", info.time0);
+	ImGui::Text("time1: %.5f ms", info.time1);
+	ImGui::Text("time2: %.5f ms", info.time2);
+	ImGui::Text("time3: %.5f ms", info.time3);
+	ImGui::Text("time4: %.5f ms", info.time4);
+	ImGui::Text("Frame Time(CPU): %.5f ms", 1000.f * info.frameTimeCPU);
+/*    ImGui::Text("Frame Time(GPU): %.5f ms", 1000.f * info.frameTimeGPU);
+    ImGui::Text("Frame Time(CPU): %.5f ms", 1000.f * info.frameTimeCPU);
+
     ImGui::Text("Memory used(GPU): MBytes");     
     ImGui::Text("Memory used(CPU): MBytes");  
     ImGui::Text("#Primitives: ");     
-    ImGui::Text("#Draw calls: ");     
+    ImGui::Text("#Draw calls: ");    */ 
     ImGui::End();
 }
 
 
-std::vector <std::function<void(int key, int scanCode, bool bShift, bool bAlt, bool bCtrl)>> keyDownCallbacks;
-std::vector <std::function<void(int key, int scanCode, bool bShift, bool bAlt, bool bCtrl)>> keyReleasedCallbacks;
-std::vector <std::function<void(int key, int scanCode, bool bShift, bool bAlt, bool bCtrl)>> keyRepeatCallbacks;
+
 
 
 int main(int, char**)
@@ -95,22 +110,20 @@ int main(int, char**)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
 #else
     // GL 3.0 + GLSL 130
-    const char* glsl_version = "#version 130";
+    const char* glsl_version = "#version 410";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
-
-	
 
     // Create window with graphics context
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
-
+    //glfwSwapInterval(1); // Enable vsync
+	Input::init(window);
     // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
     bool err = gl3wInit() != 0;
@@ -123,56 +136,34 @@ int main(int, char**)
 #endif
     if (err)
     {
-        fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+		std::cerr << "Failed to initialize OpenGL loader!" << std::endl;
         return 1;
     }
 
-	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) 
-	{
-		bool bShift = mods & GLFW_MOD_SHIFT;
-		bool bAlt	= mods & GLFW_MOD_ALT;
-		bool bCtrl	= mods & GLFW_MOD_CONTROL;
-		std::cout << "mods = " << mods << std::endl;
-		std::cout << bShift << std::endl;
-		std::cout << bAlt << std::endl;
-		std::cout << bCtrl << std::endl;
-
-		switch (action)
-		{
-			case GLFW_PRESS : 
-			{
-				for (auto& cb : keyDownCallbacks) cb(key, scancode, bShift, bAlt, bCtrl);
-				break;
-			}
-			case GLFW_RELEASE:
-			{
-				for (auto& cb : keyReleasedCallbacks) cb(key, scancode, bShift, bAlt, bCtrl);
-				break;
-			}
-			case GLFW_REPEAT:
-			{
-				for (auto& cb : keyRepeatCallbacks) cb(key, scancode, bShift, bAlt, bCtrl);
-				break;
-			}
-			default:
-				break;
-		}
-	});
 	
-    // Setup Dear ImGui context
-    //IMGUI_CHECKVERSION();
-   //ImGui::CreateContext();
+	
+    //Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+
     //ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    // io .ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    //ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+
+
+    ImGui::StyleColorsDark();
+
+
+   // ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
-    //ImGui_ImplGlfw_InitForOpenGL(window, true);
-   // ImGui_ImplOpenGL3_Init(glsl_version);
+
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -191,29 +182,24 @@ int main(int, char**)
 
 	
 
-	keyDownCallbacks.push_back([](int key, int scancode, bool bShift, bool bAlt, bool bCtrl) 
-	{
+	//keyDownCallbacks.push_back([](int key, int scancode, bool bShift, bool bAlt, bool bCtrl) 
+	//{
+	//	std::cout << "key = "<< key << ", bShift = "<<(bShift ? "true" : "false") <<  std::endl;
+	//});
 
-		std::cout << "key = "<< key << ", bShift = "<<(bShift ? "true" : "false") <<  std::endl;
-	});
-
-	keyDownCallbacks.push_back([](int key, int scancode, bool bShift, bool bAlt, bool bCtrl)
-	{
-		std::cout << "asdasdasd" << std::endl;
-		
-	});
+	//keyDownCallbacks.push_back([](int key, int scancode, bool bShift, bool bAlt, bool bCtrl)
+	//{
+	//	std::cout << "asdasdasd" << std::endl;
+	//});
 	
 
     // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
-	
 	//auto shader = SharedAsset::FromFile<GLSLShader>("effect.glsl");
 
-	auto shaderRed = SharedAsset::New < GLSLShader>("red");
+	auto shaderRed = SharedAsset::New<GLSLShader>("red");
 	{
 		ShaderStageData shaderData;
 		shaderData.vertexShaderCode =
@@ -235,7 +221,7 @@ int main(int, char**)
 		shaderRed->setShaderStageData(shaderData);
 	}
 
-	auto shaderBlue = SharedAsset::New < GLSLShader>("blue");
+	auto shaderBlue = SharedAsset::New<GLSLShader>("blue");
 	{
 		ShaderStageData shaderData;
 		shaderData.vertexShaderCode =
@@ -256,10 +242,9 @@ int main(int, char**)
 
 		shaderBlue->setShaderStageData(shaderData);
 	}
-	
-	auto mesh = SharedAsset::New<Mesh>("asdasdasd");// "sibenik-cathedral-vray.obj");
 
-	mesh->subMeshes = std::vector<SubMesh>(1);
+
+	auto mesh = SharedAsset::New<Mesh>("sibenik-cathedral-vray.obj");
 	
 	SubMeshVertexData data;
 	data.positions = {
@@ -272,6 +257,7 @@ int main(int, char**)
 	   { 1.0,  1.0, -2.0},
 	   {-1.0,  1.0, -2.0}
 	};
+	
 	data.indices = {
 		// front
 		0, 1, 2,
@@ -292,88 +278,52 @@ int main(int, char**)
 		3, 2, 6,
 		6, 7, 3
 	};
-
 	data.normals	= std::vector<glm::vec3>(8);
 	data.tangents	= std::vector<glm::vec3>(8);
 	data.bitangents = std::vector<glm::vec3>(8);
 	data.colors		= std::vector<glm::vec4>(8);
 	data.uvs.push_back(std::vector<glm::vec3>(8));
-	mesh->subMeshes[0].setVertexData(data);
 
+	mesh->addSubMesh(data, nullptr);	
+	
+	Camera camera;
+	CameraController controller;
+	controller.setCamera(&camera);
 
-	shaderRed->updateGpuMemory();
-	shaderBlue->updateGpuMemory();
-
-	for (auto& mesh : mesh->subMeshes)
-	{
-		mesh.updateGpuMemory();
-	}
-
-
-	float lastTime = glfwGetTime();
-	float angle = 0;
+	camera.transform.setPosition(glm::vec3(-10, 0, 0));
 	
 	Transform transformRed;
 	Transform transformBlue;
-	Camera camera;
-	CameraController controller;
-	camera.transform.setPosition(glm::vec3(-10, 0, 0));
-	
-	glm::vec3 pos(0);
-	
-/*
-	keyDownCallbacks.push_back([&](int key, int scanCode, bool bShift, bool bAlt, bool bCtrl) 
-	{
-		if (key == GLFW_KEY_W)
-		{
-			pos += glm::vec3(1, 0, 0);
-		}
-		if (key == GLFW_KEY_S)
-		{
-			pos += glm::vec3(-1, 0, 0);
-		}
-	});
-*/
-	// auto view =  (glm::lookAtLH(glm::vec3(-20, 0, 0), glm::vec3( 0, 0, 0), glm::vec3( 0, 1, 0)));
-	Transform animTransform;
-
 	transformRed.setPosition({ 0, -3, 0 });
 	transformBlue.setPosition({ 0, 3, 0 });
+
+	float lastTime = (float)glfwGetTime();
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
+		stopwatch::Stopwatch sw;
+		sw.start();
+
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
-        // Start the Dear ImGui frame
-        //ImGui_ImplOpenGL3_NewFrame();
-       // ImGui_ImplGlfw_NewFrame();
-       // ImGui::NewFrame();
 
-       // PerformanceInfo info;
-
-      //  PerformanceOverlay(info);
-        
-
-		double time = glfwGetTime();
-		double deltaTime = time - lastTime;
+		float time = (float)glfwGetTime();
+		float deltaTime = time - lastTime;
 		lastTime = time;
 
+		PerformanceInfo info;	
 		
+		GpuResourceBackend::get()->update(deltaTime);
+
+		info.time0 = sw.elapsed();
+		sw.start();
 		controller.update(deltaTime);
-		controller.camera = &camera;
-		controller.window = window;
-		angle += deltaTime * 45;  // 45° per second
 
-
-
-
-		
-
-        //ImGui::Render();
+        
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
@@ -381,47 +331,50 @@ int main(int, char**)
         glClear(GL_COLOR_BUFFER_BIT);
 		//glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
-        //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		glm::mat4 projMatrix = glm::perspective(glm::radians(90.0f), (float)display_w / (float)display_h, 0.1f, 1000.0f);
-
-		
-		std::shared_ptr<GLSLShader> shaders[2]{ shaderRed, shaderBlue };
-		Transform* transforms[2]{ &transformRed, &transformBlue };
-		// worldViewProjectionMatrix = anim;
-		auto view = camera.getViewMatrix();
-		for (int i : { 0, 1 })
+		info.time1 = sw.elapsed(); sw.start();
+		RenderView rw
 		{
-			auto worldViewProjectionMatrix = projMatrix * view * transforms[i]->getLocalToWorldMatrix();
-			shaders[i]->bind();
-			glUniformMatrix4fv(glGetUniformLocation(shaders[i]->programHandle, "WorldViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(worldViewProjectionMatrix));
-
-
-			for (auto&subMesh : mesh->subMeshes)
-			{
-				glBindVertexArray(subMesh.VAO);
-				glDrawElements(
-					GL_TRIANGLES,										// mode
-					(GLsizei)subMesh.getVertexData().indices.size(),    // count
-					GL_UNSIGNED_INT,   // type
-					(void*)0           // element array buffer offset
-				);
-			}
-		}
-
+			camera.getViewMatrix(),
+			glm::perspective(glm::radians(90.0f), (float)display_w / (float)display_h, 0.1f, 1000.0f)
+		};
 		
+		RenderObject ro(
+			mesh->subMeshes[0].get(),
+			transformRed,
+			shaderBlue.get(),
+			nullptr,
+			0
+			);
+
+		GpuResourceBackend::get()->getRenderer()->submitOneTimeRenderObject(ro);
+		info.time2 = sw.elapsed(); sw.start();
+		GpuResourceBackend::get()->getRenderer()->executeRenderJobs(rw);
 		
+
 		auto error = glGetError();
-
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		
+		info.frameTimeCPU = deltaTime;
+		PerformanceOverlay(info);
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		info.time3 = sw.elapsed(); sw.start();
+		glfwSetWindowTitle(window, std::to_string(deltaTime).c_str());
         glfwSwapBuffers(window);
+
+		info.time4 = sw.elapsed(); sw.start();
     }
 
 	//SharedAsset<GLSLShader>::AssetCache.clear();
 
     // Cleanup
-  //  ImGui_ImplOpenGL3_Shutdown();
-  //  ImGui_ImplGlfw_Shutdown();
-  //  ImGui::DestroyContext();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -1,12 +1,15 @@
 #include "CameraController.h"
-
+#include <iostream>
+#include "Input.h"
 
 CameraController::CameraController(const CameraController & other)
 {
+
 }
 
 CameraController::CameraController(CameraController && other) noexcept
 {
+
 }
 
 CameraController& CameraController::operator=(CameraController && other) noexcept
@@ -24,43 +27,65 @@ CameraController& CameraController::operator=(const CameraController & other)
 	return *this;
 }
 
+void CameraController::setCamera(Camera * camera)
+{
+	this->camera		= camera;
+	this->eulerAngles	= camera->transform.getEulerAngles();
+}
+
 void CameraController::update(float deltaTime)
 {	
-	
-	if (window && camera)
+	if (camera)
 	{
-		double currentMousePosX = 0;
-		double currentMousePosY = 0;
-
-		glfwGetCursorPos(window, &currentMousePosX, &currentMousePosY);
-
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == 1)
+		if (!bInitialized)
 		{
-			if (mousePosX >= 0 && mousePosY >= 0)
-			{
-				auto rotation = camera->transform.getEulerAngles();
-				
-				auto deltaX = currentMousePosX 	- mousePosX;
-				auto deltaY = currentMousePosY 	- mousePosY; 
-				camera->transform.setRotation(camera->transform.getEulerAngles() + glm::vec3(0.f, deltaY * 0.2, -deltaX * 0.2));// deltaY * 0.2));
-			}
-
-			auto fw = camera->transform.forward();
-			auto right = camera->transform.right();
-
-			glm::vec3 delta =
-				(glfwGetKey(window, GLFW_KEY_W) ? fw * cameraSpeed : glm::vec3()) +
-				(glfwGetKey(window, GLFW_KEY_A) ? -right * cameraSpeed : glm::vec3()) +
-				(glfwGetKey(window, GLFW_KEY_S) ? -fw * cameraSpeed : glm::vec3()) +
-				(glfwGetKey(window, GLFW_KEY_D) ? right * cameraSpeed : glm::vec3());
-
-			camera->transform.setPosition(camera->transform.getPosition() + delta);
+			mousePos = Input::getMousePosition();
+			bInitialized = true;
 		}
 
-		mousePosX = currentMousePosX;
-		mousePosY = currentMousePosY;
+		auto currentMousePos = Input::getMousePosition();
 
+		if (Input::getMouseButton(MouseButtom::BUTTON_2) == KeyAction::PRESS)
+		{
+			{
+				eulerAngles.x = 0;
+				eulerAngles.y += (float)(mousePos.y - currentMousePos.y) * 0.2f;
+				eulerAngles.z += (float)(mousePos.x - currentMousePos.x) * 0.2f;
+				eulerAngles.y = glm::clamp(eulerAngles.y, -89.9f, 89.9f);
 
+				if (eulerAngles.z >= 360.0f)
+				{
+					eulerAngles.z -= 360.0f;
+				}
+				if (eulerAngles.z < 0.0f)
+				{
+					eulerAngles.z += 360.0f;
+				}
+
+				// Rotate around up axis
+				auto rotZ = glm::angleAxis(glm::radians(eulerAngles.z), glm::Up);
+				// Rotate y-axis around the rotated z-axis
+				auto yAxis = rotZ * glm::Right;
+				// Rotate around rotated yAxis
+				auto rotY = glm::angleAxis(glm::radians(eulerAngles.y), yAxis);
+				
+				camera->transform.setRotation(rotY * rotZ);
+			}
+
+			{
+				auto fw = camera->transform.forward();
+				auto right = camera->transform.right();
+
+				glm::vec3 delta =
+					(Input::getKey(Key::W) == KeyAction::PRESS ? fw * cameraSpeed : glm::vec3(0.f)) +
+					(Input::getKey(Key::A) == KeyAction::PRESS ? -right * cameraSpeed : glm::vec3(0.f)) +
+					(Input::getKey(Key::S) == KeyAction::PRESS ? -fw * cameraSpeed : glm::vec3(0.f)) +
+					(Input::getKey(Key::D) == KeyAction::PRESS ? right * cameraSpeed : glm::vec3(0.f));
+
+				camera->transform.setPosition(camera->transform.getPosition() + delta);
+			}
+		}
+
+		mousePos = currentMousePos;
 	}
-
 }

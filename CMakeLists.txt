@@ -23,12 +23,12 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "src/*.cpp")
 set (SOURCES
 	${sources} 
 	${headers}
-        ${imgui_SOURCE_DIR}/imgui.cpp
-        ${imgui_SOURCE_DIR}/imgui_draw.cpp
-        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-        ${imgui_SOURCE_DIR}/imgui_demo.cpp
-        ${imgui_SOURCE_DIR}/examples/imgui_impl_glfw.cpp
-        ${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/examples/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
 )
 
 
@@ -47,10 +47,11 @@ target_include_directories(${PROJECT} PUBLIC
 	${glfw_SOURCE_DIR}/include/GLFW
 	${glew_SOURCE_DIR}/include
 	${assimp_SOURCE_DIR}/include
-    	${glm_SOURCE_DIR}
-    	${imgui_SOURCE_DIR}
+    ${glm_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}
 )
 
+	#${stduuid_SOURCE_DIR}/include
 
 set(LIBRARIES
     glfw

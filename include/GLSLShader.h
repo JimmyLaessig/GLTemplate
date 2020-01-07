@@ -1,6 +1,5 @@
 #pragma once
-#include "GpuResource.h"
-#include "SharedAsset.h"
+#include "Shader.h"
 #include "GL/glew.h"
 #include <optional>
 
@@ -34,14 +33,14 @@ struct ShaderStageData
 };
 
 
-
-class GLSLShader : public GpuResource, public SharedAsset
+class GLSLShader : public Shader
 {
 private: 
 
-
 	ShaderStageData shaderStageData;
+
 public:
+
 	GLuint programHandle			= 0;
 	GLuint vertexStage				= 0;
 	GLuint geometryStage			= 0;
@@ -51,8 +50,6 @@ public:
 	GLuint computeStage				= 0;
 
 public: 
-
-	//GLSLShader() = default;
 
 	virtual ~GLSLShader();
 
@@ -65,7 +62,8 @@ public:
 
 	virtual bool reload() override;
 
-	void bind()
+
+	virtual void bind()
 	{
 		glUseProgram(programHandle);
 	}

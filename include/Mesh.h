@@ -1,11 +1,14 @@
 #pragma once
-#include <gl/glew.h>
+
 //#include "Math.h"
-#include "glm/glm.hpp"
-#include "Material.h"
 #include <vector>
+#include <memory>
+#include "Material.h"
+#include "GL/glew.h"
+#include "glm/glm.hpp"
 #include "GpuResource.h"
 #include "SharedAsset.h"
+
 
 struct SubMeshVertexData
 {
@@ -29,47 +32,32 @@ struct SubMeshVertexData
     std::vector<unsigned int> indices;
 };
 
-struct Vertex
-{
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 tangent;
-    glm::vec3 bitangent;
-    glm::vec4 color;
-    std::vector<glm::vec3> uvs;
-};
 
 
-class SubMesh : public GpuResource
+class SubMesh : public DrawableGpuResource
 {
 public:
 	friend class Mesh;
 
-    SubMesh() = default;
+
+	SubMesh();
+
+	/**
+	 *
+	 */
+	SubMesh(const SubMeshVertexData& vertexData, Material * material);
+
+	/**
+	 *
+	 */
+	SubMesh(SubMeshVertexData&& vertexData, Material * material);
+
+
+	//SubMesh(SubMesh&& other) noexcept;
 
 
     virtual ~SubMesh();
 
-    /**
-     * @brief Set the Vertex Data object
-     * 
-     * @param vertexData 
-     */
-    void setVertexData(const SubMeshVertexData& vertexData);
-    
-	/**
-	 * @brief Set the Vertex Data object
-	 *
-	 * @param vertexData
-	 */
-	void setVertexData(SubMeshVertexData&& vertexData);
-
-    /**
-     * @brief Set the Vertex Data object
-     * 
-     * @param vertexData 
-     */
-    void setVertexData(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
 
     /**
      * @brief Set the Material object
@@ -83,7 +71,7 @@ public:
      * 
      * @return const SubMeshVertexData& 
      */
-    const SubMeshVertexData& getVertexData();
+    const SubMeshVertexData& getVertexData() const;
 
     /**
      * @brief Get the Material object
@@ -92,8 +80,25 @@ public:
      */
     Material* getMaterial();
 
-protected:
 
+	GLuint getVertexArrayObject() const;
+
+	
+	std::function<void()> getDrawCall() const override
+	{
+		return [vbo = getVertexArrayObject(), count = (GLsizei)getVertexData().indices.size()]()
+		{
+			glBindVertexArray(vbo);
+			glDrawElements(
+				GL_TRIANGLES,		// mode
+				count,				// count
+				GL_UNSIGNED_INT,	// type
+				(void*)0			// element array buffer offset
+			);
+		};
+	}
+
+protected:
 	/**
 	 * @brief
 	 *
@@ -105,6 +110,8 @@ protected:
 	 *
 	 */
 	virtual void updateGpuMemory_Internal() override;
+
+
 	
 
 private: 		
@@ -115,10 +122,12 @@ private:
       
     Material* material;
 	
+	GLuint VAO;
+
 	std::vector<GLuint> VBOs;
 
 public: 
-	GLuint VAO = 0;
+	
 
 };
 
@@ -128,9 +137,27 @@ class Mesh : public SharedAsset
 public: 
     Mesh() = default;
 
-    std::vector<SubMesh> subMeshes;
 
+	/**
+	 *
+	 */
 	virtual bool load() override;
 
+	/**
+	 *
+	 */
 	virtual bool reload() override;
+
+	/**
+	 *
+	 */
+	SubMesh* addSubMesh(const SubMeshVertexData& vertexData, Material* material);
+
+	/**
+	 *
+	 */
+	SubMesh* addSubMesh(SubMeshVertexData&& vertexData, Material* material);
+
+
+	std::vector<std::unique_ptr<SubMesh>> subMeshes;
 };

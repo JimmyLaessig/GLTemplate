@@ -59,6 +59,23 @@ if(NOT glm_POPULATED)
   message(STATUS "Cloning glm:  https://github.com/g-truc/glm.git - done")
 endif()
 
+##################################################
+# stduuid
+##################################################
+
+FetchContent_Declare(
+  stduuid
+  GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
+  GIT_TAG v1.0
+)
+
+FetchContent_GetProperties(stduuid)
+if(NOT stduuid_POPULATED)
+  message(STATUS "Cloning stduuid:  https://github.com/mariusbancila/stduuid.git")
+  FetchContent_Populate(stduuid)
+  message(STATUS "Cloning stduuid:  https://github.com/mariusbancila/stduuid.git - done")
+endif()
+	
 
 ##################################################
 # Assimp
@@ -94,3 +111,5 @@ if(NOT imgui_POPULATED)
   FetchContent_Populate(imgui)
   message(STATUS "Cloning imgui:  git@github.com:ocornut/imgui.git - done")
 endif()
+
+

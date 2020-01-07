@@ -12,7 +12,6 @@ Camera::Camera(Camera && other) noexcept
 Camera& Camera::operator=(Camera && other) noexcept
 {
 	// TODO: hier Rückgabeanweisung eingeben
-
 	return *this;
 }
 

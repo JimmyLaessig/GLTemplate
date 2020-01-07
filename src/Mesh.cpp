@@ -5,93 +5,92 @@
 #include <assimp/scene.h> 
 #include <assimp/postprocess.h>
 #include <Stopwatch.h>
-  
+
+#include "GL/glew.h"
+
+
+SubMeshVertexData::SubMeshVertexData(const SubMeshVertexData & other) :
+	positions(other.positions),
+	normals(other.normals),
+	tangents(other.tangents),
+	bitangents(other.bitangents),
+	colors(other.colors),
+	uvs(other.uvs),
+	indices(other.indices)
+{}
+
+
+SubMeshVertexData::SubMeshVertexData(SubMeshVertexData && other) :
+	positions(std::move(other.positions)),
+	normals(std::move(other.normals)),
+	tangents(std::move(other.tangents)),
+	bitangents(std::move(other.bitangents)),
+	colors(std::move(other.colors)),
+	uvs(std::move(other.uvs)),
+	indices(std::move(other.indices))
+{}
+
+
+SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other)
+{
+	this->positions = other.positions;
+	this->normals = other.normals;
+	this->tangents = other.tangents;
+	this->bitangents = other.bitangents;
+	this->colors = other.colors;
+	this->uvs = other.uvs;
+	this->indices = other.indices;
+
+	return *this;
+}
+
+
+SubMeshVertexData & SubMeshVertexData::operator=(SubMeshVertexData && other)
+{
+	this->positions = std::move(other.positions);
+	this->normals = std::move(other.normals);
+	this->tangents = std::move(other.tangents);
+	this->bitangents = std::move(other.bitangents);
+	this->colors = std::move(other.colors);
+	this->uvs = std::move(other.uvs);
+	this->indices = std::move(other.indices);
+
+	return *this;
+}
+
+
+//SubMesh::SubMesh(SubMesh && other) :
+//	name(std::move(other.name)),
+//	vertexData(std::move(other.vertexData)),
+//	material(other.material),
+//	VBOs(std::move(other.VBOs)),
+//	VAO(other.VAO)
+//	{
+//		other.VAO = 0;
+//		other.material = nullptr;
+//	}
+
+
+SubMesh::SubMesh(const SubMeshVertexData& vertexData, Material* material) :
+	vertexData(vertexData),
+	material(material)
+{
+	markOutdated();
+}
+
+
+SubMesh::SubMesh(SubMeshVertexData&& vertexData, Material* material) : 
+	vertexData(std::move(vertexData)),
+	material(material)
+{
+	markOutdated();
+}
+
+
+
 SubMesh::~SubMesh()
 {
 	freeGpuMemory();
-}
-
-
-void SubMesh::setVertexData(const SubMeshVertexData & vertexData)
-{
-	getResourceLock().lock();
-	this->vertexData.positions	= vertexData.positions;
-	this->vertexData.normals	= vertexData.normals;
-	this->vertexData.tangents	= vertexData.tangents;
-	this->vertexData.bitangents = vertexData.bitangents;
-	this->vertexData.colors		= vertexData.colors;
-	this->vertexData.uvs		= vertexData.uvs;
-	this->vertexData.indices	= vertexData.indices;
-
-	for (auto& v : this->vertexData.normals)	{v = glm::normalize(v);};
-	for (auto& v : this->vertexData.tangents)	{v = glm::normalize(v);};
-	for (auto& v : this->vertexData.bitangents)	{v = glm::normalize(v);};
-	
-	auto numVertices = this->vertexData.positions.size();
-
-	assert(this->vertexData.normals.size() == numVertices);
-	assert(this->vertexData.tangents.size() == numVertices);
-	assert(this->vertexData.bitangents.size() == numVertices);
-	assert(this->vertexData.colors.size() == numVertices);
-	for (auto& uvSet : this->vertexData.uvs){assert(uvSet.size() == numVertices);}
-
-	getResourceLock().unlock();
-
-	markOutdated();
-}
-
-void SubMesh::setVertexData(SubMeshVertexData && vertexData)
-{
-	getResourceLock().lock();
-	this->vertexData = std::move(vertexData);
-	getResourceLock().unlock();
-
-	markOutdated();
-}
-
-
-void SubMesh::setVertexData(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
-{	
-	getResourceLock().lock();
-
-	auto numVertices = vertices.size();
-
-	// Determine the max
-	size_t numUVChannels = numVertices <= 0 ? 0 : vertices[0].uvs.size();
-		
-	this->vertexData = SubMeshVertexData();
-	
-	this->vertexData.positions.reserve(numVertices);
-	this->vertexData.normals.reserve(numVertices);
-	this->vertexData.tangents.reserve(numVertices);
-	this->vertexData.bitangents.reserve(numVertices);
-	this->vertexData.colors.reserve(numVertices);
-
-	this->vertexData.uvs.reserve(numUVChannels);
-	for (auto& uvSet : vertexData.uvs){uvSet.reserve(numVertices);}
-
-	for (auto& v : vertices)
-	{
-		vertexData.positions.push_back(v.position);
-		vertexData.normals.push_back(glm::normalize(v.normal));
-		vertexData.tangents.push_back(glm::normalize(v.tangent));
-		vertexData.bitangents.push_back(glm::normalize(v.bitangent));
-		vertexData.colors.push_back(v.color);
-		
-		assert(vertexData.uvs.size() == numUVChannels);
-
-		int i = 0;
-		for (auto& uv : v.uvs)
-		{
-			vertexData.uvs[i++].push_back(uv);
-		}	
-	}
-
-	this->vertexData.indices = indices;
-	
-	getResourceLock().unlock();
-
-	markOutdated();
 }
 
 
@@ -196,7 +195,13 @@ void SubMesh::updateGpuMemory_Internal()
 }
 
 
-const SubMeshVertexData & SubMesh::getVertexData()
+GLuint SubMesh::getVertexArrayObject() const
+{
+	return VAO;
+}
+
+
+const SubMeshVertexData & SubMesh::getVertexData() const
 {
 	return this->vertexData;
 }
@@ -218,27 +223,28 @@ bool Mesh::load()
 	if (auto pScene = importer.ReadFile(getAssetPath().c_str(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace))
 	{
 		this->subMeshes.clear();
-		this->subMeshes = std::vector<SubMesh>(pScene->mNumMeshes);
+		//this->subMeshes = std::set<SubMesh>(pScene->mNumMeshes);
 		
 		uint64_t alloc = 0;
 		uint64_t populate = 0;
 		
 		for (auto i = 0u; i < pScene->mNumMeshes; i++)
 		{
-			SubMesh& subMesh	= subMeshes[i];
+			
 			auto aiMesh			= pScene->mMeshes[i];
 			stopwatch::Stopwatch sw;
 			sw.start();
-			subMesh.vertexData.positions.resize(aiMesh->mNumVertices);
-			subMesh.vertexData.normals.resize(aiMesh->mNumVertices);
-			subMesh.vertexData.tangents.resize(aiMesh->mNumVertices);
-			subMesh.vertexData.bitangents.resize(aiMesh->mNumVertices);
-			subMesh.vertexData.colors.resize(aiMesh->mNumVertices);
-			subMesh.vertexData.uvs.resize(aiMesh->GetNumUVChannels());
-			subMesh.vertexData.indices.resize(aiMesh->mNumFaces * 3u);
-			subMesh.name = aiMesh->mName.C_Str();
+			SubMeshVertexData vertexData;
+			vertexData.positions.resize(aiMesh->mNumVertices);
+			vertexData.normals.resize(aiMesh->mNumVertices);
+			vertexData.tangents.resize(aiMesh->mNumVertices);
+			vertexData.bitangents.resize(aiMesh->mNumVertices);
+			vertexData.colors.resize(aiMesh->mNumVertices);
+			vertexData.uvs.resize(aiMesh->GetNumUVChannels());
+			vertexData.indices.resize(aiMesh->mNumFaces * 3u);
 			
-			for (auto& uvs : subMesh.vertexData.uvs)
+			
+			for (auto& uvs : vertexData.uvs)
 			{
 				uvs.resize(aiMesh->mNumVertices);
 			}
@@ -248,35 +254,35 @@ bool Mesh::load()
 			
 			if (aiMesh->HasPositions())
 			{
-				std::memcpy(subMesh.vertexData.positions.data(), aiMesh->mVertices, aiMesh->mNumVertices * sizeof(glm::vec3));
+				std::memcpy(vertexData.positions.data(), aiMesh->mVertices, aiMesh->mNumVertices * sizeof(glm::vec3));
 			}
 			if (aiMesh->HasNormals())
 			{
-				std::memcpy(subMesh.vertexData.normals.data(), aiMesh->mNormals, aiMesh->mNumVertices * sizeof(glm::vec3));
+				std::memcpy(vertexData.normals.data(), aiMesh->mNormals, aiMesh->mNumVertices * sizeof(glm::vec3));
 			}
 			if (aiMesh->HasTangentsAndBitangents())
 			{
-				std::memcpy(subMesh.vertexData.tangents.data(), aiMesh->mTangents, aiMesh->mNumVertices * sizeof(glm::vec3));
-				std::memcpy(subMesh.vertexData.bitangents.data(), aiMesh->mBitangents, aiMesh->mNumVertices * sizeof(glm::vec3));
+				std::memcpy(vertexData.tangents.data(), aiMesh->mTangents, aiMesh->mNumVertices * sizeof(glm::vec3));
+				std::memcpy(vertexData.bitangents.data(), aiMesh->mBitangents, aiMesh->mNumVertices * sizeof(glm::vec3));
 			}
 			if (aiMesh->HasVertexColors(0))
 			{
-				std::memcpy(subMesh.vertexData.colors.data(), aiMesh->mColors[0], aiMesh->mNumVertices * sizeof(aiColor4D));
+				std::memcpy(vertexData.colors.data(), aiMesh->mColors[0], aiMesh->mNumVertices * sizeof(aiColor4D));
 			}
 			for (auto c = 0u; c < aiMesh->GetNumUVChannels(); c++)
 			{
-				std::memcpy(subMesh.vertexData.uvs[c].data(), aiMesh->mTextureCoords[c], aiMesh->mNumVertices * sizeof(glm::vec3));
+				std::memcpy(vertexData.uvs[c].data(), aiMesh->mTextureCoords[c], aiMesh->mNumVertices * sizeof(glm::vec3));
 			}
 
 			for (auto fi = 0u; fi < aiMesh->mNumFaces; fi++)
 			{
 				auto& face = aiMesh->mFaces[fi];
 				assert(face.mNumIndices == 3);
-				std::memcpy(&subMesh.vertexData.indices[fi], face.mIndices, 3);
+				std::memcpy(&vertexData.indices[fi], face.mIndices, 3);
 			}
 
-			subMesh.markOutdated();
-
+			addSubMesh(std::move(vertexData), nullptr);
+			
 			populate += sw.elapsed();
 		}
 
@@ -297,53 +303,34 @@ bool Mesh::reload()
 }
 
 
-SubMeshVertexData::SubMeshVertexData(const SubMeshVertexData & other)
+SubMesh* Mesh::addSubMesh(const SubMeshVertexData& vertexData, Material * material)
 {
-	this->positions		= other.positions;
-	this->normals		= other.normals;
-	this->tangents		= other.tangents;
-	this->bitangents	= other.bitangents;
-	this->colors		= other.colors;
-	this->uvs			= other.uvs;
-	this->indices		= other.indices;
+	return this->subMeshes.emplace_back(new SubMesh(std::move(vertexData), material)).get();
 }
 
 
-SubMeshVertexData::SubMeshVertexData(SubMeshVertexData && other)
+SubMesh* Mesh::addSubMesh(SubMeshVertexData&& vertexData, Material * material)
 {
-	this->positions		= std::move(other.positions);
-	this->normals		= std::move(other.normals);
-	this->tangents		= std::move(other.tangents);
-	this->bitangents	= std::move(other.bitangents);
-	this->colors		= std::move(other.colors);
-	this->uvs			= std::move(other.uvs);
-	this->indices		= std::move(other.indices);
+	return this->subMeshes.emplace_back(new SubMesh(std::move(vertexData), material)).get();
 }
 
 
-SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other)
-{
-	this->positions = other.positions;
-	this->normals = other.normals;
-	this->tangents = other.tangents;
-	this->bitangents = other.bitangents;
-	this->colors = other.colors;
-	this->uvs = other.uvs;
-	this->indices = other.indices;
-
-	return *this;
-}
 
 
-SubMeshVertexData & SubMeshVertexData::operator=(SubMeshVertexData && other)
-{
-	this->positions		= std::move(other.positions);
-	this->normals		= std::move(other.normals);
-	this->tangents		= std::move(other.tangents);
-	this->bitangents	= std::move(other.bitangents);
-	this->colors		= std::move(other.colors);
-	this->uvs			= std::move(other.uvs);
-	this->indices		= std::move(other.indices);
-
-	return *this;
-}
+//RenderObject toRenderObject(const SubMesh* subMesh)
+//{
+//	return RenderObject{
+//		nullptr,
+//		nullptr,
+//		[vbo = subMesh->getVertexArrayObject(), count = subMesh->getVertexData().indices.size()]()
+//		{
+//			glBindVertexArray(vbo);
+//			glDrawElements(
+//				GL_TRIANGLES,		// mode
+//				count,				// count
+//				GL_UNSIGNED_INT,	// type
+//				(void*)0			// element array buffer offset
+//			);
+//			}
+//	};
+//}

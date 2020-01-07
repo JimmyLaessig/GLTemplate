@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "Camera.h"
-#include <glfw3.h>
+
 
 class CameraController
 {
@@ -9,20 +9,38 @@ public:
 
 	CameraController() = default;
 
+
 	CameraController(const CameraController& other);
+
 
 	CameraController(CameraController&& other) noexcept;
 
+
 	CameraController& operator=(CameraController&& other)  noexcept;
+
 
 	CameraController& operator=(const CameraController& other);
 
-	float cameraSpeed = 2.f;
+
+	void setCamera(Camera* camera);
+
+
 	
-	Camera* camera = nullptr;
-	GLFWwindow* window = nullptr;
+	
+
+	
+	
+
 	void update(float deltaTime);
 
-	double mousePosX = -1;
-	double mousePosY = -1;
+private:
+
+	Camera* camera = nullptr;
+
+	float cameraSpeed = 1.f;
+
+	glm::vec2 mousePos = glm::vec2(0);
+	glm::vec3 eulerAngles = glm::vec3(0);
+
+	bool bInitialized = false;
 };

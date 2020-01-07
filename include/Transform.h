@@ -1,9 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/matrix.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "VectorMath.h"
 
 
 struct Transform
@@ -70,6 +66,12 @@ public:
 	void setPositionRotationAndScale(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale);
 
 
+	glm::vec3 transformPosition(const glm::vec3& position);
+
+
+	glm::vec3 transformVector(const glm::vec3& direction);
+
+
 	glm::vec3 forward() const;
 
 	glm::vec3 up() const;
@@ -82,7 +84,7 @@ private:
 
 	glm::vec3 scale			= glm::vec3(1);
 
-	//glm::quat rotation		= glm::quat();
+	glm::quat rotation		= glm::quat(glm::vec3(0, 0, 0));
 	
 	glm::vec3 eulerAngles	= glm::vec3(0);
 

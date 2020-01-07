@@ -1,9 +1,6 @@
 #include "Transform.h"
-#include "glm/gtx/transform.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/euler_angles.hpp>
-#define GLM_FORCE_RADIANS
+
+#include <iostream>
 
 
 
@@ -79,15 +76,13 @@ const glm::vec3 Transform::getPosition() const
 
 const glm::vec3 Transform::getEulerAngles() const
 {
-	//return glm::eulerAngles(rotation);
-	return eulerAngles;
+	return glm::eulerAngles(rotation);
 }
 
 
 const glm::quat Transform::getRotation() const
 {
-	//return rotation;
-	return glm::quat();
+	return rotation;
 }
 
 
@@ -113,15 +108,14 @@ void Transform::setPosition(const glm::vec3 & position)
 
 void Transform::setRotation(const glm::quat & rotation)
 {
-	//this->rotation	= rotation;	
+	this->rotation	= rotation;	
 	this->bOutdated = true;
 }
- 
+
 
 void Transform::setRotation(const glm::vec3 & eulerAngles)
 {
-	// this->rotation	= glm::quat(glm::orientate3(glm::radians(eulerAngles)));		
-	this->eulerAngles = eulerAngles;
+	this->rotation = glm::quat(glm::radians(eulerAngles));
 	this->bOutdated = true;
 }
 
@@ -156,21 +150,33 @@ void Transform::setPositionRotationAndScale(const glm::vec3 & position, const gl
 }
 
 
+glm::vec3 Transform::transformPosition(const glm::vec3 & position)
+{
+	return glm::vec3(getLocalToWorldMatrix() * glm::vec4(position, 1));
+}
+
+
+glm::vec3 Transform::transformVector(const glm::vec3 & direction)
+{
+	return rotation * direction * glm::conjugate(rotation);
+}
+
+
 glm::vec3 Transform::forward() const
 {
-	return  glm::normalize(glm::vec3(getLocalToWorldMatrix() * glm::vec4(1, 0, 0, 1)) - position);
+	return  rotation * glm::Forward;
 }
 
 
 glm::vec3 Transform::up() const
 {
-	return  glm::normalize(glm::vec3(getLocalToWorldMatrix() * glm::vec4(0, 0, 1, 1)) - position);
+	return  rotation * glm::Up;
 }
 
 
 glm::vec3 Transform::right() const
 {
-	return glm::normalize(glm::vec3(getLocalToWorldMatrix() * glm::vec4(0, -1, 0, 1)) - position);
+	return rotation * glm::Right;
 }
 
 
@@ -180,11 +186,14 @@ void Transform::computeMatrices() const
 	{
 		bOutdated = false;
 		auto T = glm::translate(position);
-		//auto R = glm::toMat4(rotation);	
-		glm::mat4 R =
-			glm::rotate(glm::mat4(1), glm::radians(eulerAngles.z), glm::vec3(0, 0, 1))*
-			glm::rotate(glm::mat4(1), glm::radians(eulerAngles.x), glm::vec3(1, 0, 0)) *
-			glm::rotate(glm::mat4(1), glm::radians(eulerAngles.y), glm::vec3(0, 1, 0));
+		auto R = glm::toMat4(rotation);
+		auto eulerAngles = getEulerAngles();
+		/*
+		R =
+			glm::rotate(glm::mat4(1), eulerAngles.z, glm::vec3(0, 0, 1)) *
+			glm::rotate(glm::mat4(1), eulerAngles.y, glm::vec3(0, 1, 0)) *
+			glm::rotate(glm::mat4(1), eulerAngles.x, glm::vec3(1, 0, 0));
+			*/
 		auto S = glm::scale(scale);
 
 		this->localToWorldMatrix		= T * R * S;
