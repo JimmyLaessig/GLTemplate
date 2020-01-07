@@ -101,7 +101,7 @@ void Renderer::executeRenderJobs(const RenderView & view)
 			ro.drawable->getDrawCall()();
 		}
 	}
-
+	oneTimeRenderObjects.clear();
 	// Execute each RenderObject
 	//for (auto& ro : renderObjects)
 	//{

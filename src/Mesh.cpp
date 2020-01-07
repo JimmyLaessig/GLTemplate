@@ -33,13 +33,13 @@ SubMeshVertexData::SubMeshVertexData(SubMeshVertexData && other) :
 
 SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other)
 {
-	this->positions = other.positions;
-	this->normals = other.normals;
-	this->tangents = other.tangents;
-	this->bitangents = other.bitangents;
-	this->colors = other.colors;
-	this->uvs = other.uvs;
-	this->indices = other.indices;
+	this->positions		= other.positions;
+	this->normals		= other.normals;
+	this->tangents		= other.tangents;
+	this->bitangents	= other.bitangents;
+	this->colors		= other.colors;
+	this->uvs			= other.uvs;
+	this->indices		= other.indices;
 
 	return *this;
 }
@@ -47,13 +47,13 @@ SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other
 
 SubMeshVertexData & SubMeshVertexData::operator=(SubMeshVertexData && other)
 {
-	this->positions = std::move(other.positions);
-	this->normals = std::move(other.normals);
-	this->tangents = std::move(other.tangents);
-	this->bitangents = std::move(other.bitangents);
-	this->colors = std::move(other.colors);
-	this->uvs = std::move(other.uvs);
-	this->indices = std::move(other.indices);
+	this->positions		= std::move(other.positions);
+	this->normals		= std::move(other.normals);
+	this->tangents		= std::move(other.tangents);
+	this->bitangents	= std::move(other.bitangents);
+	this->colors		= std::move(other.colors);
+	this->uvs			= std::move(other.uvs);
+	this->indices		= std::move(other.indices);
 
 	return *this;
 }
@@ -138,7 +138,7 @@ void SubMesh::updateGpuMemory_Internal()
 		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
 		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.positions[0], GL_STATIC_DRAW);
 		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 		bufferIndex++;
 	}
 	
@@ -241,13 +241,11 @@ bool Mesh::load()
 			vertexData.bitangents.resize(aiMesh->mNumVertices);
 			vertexData.colors.resize(aiMesh->mNumVertices);
 			vertexData.uvs.resize(aiMesh->GetNumUVChannels());
-			vertexData.indices.resize(aiMesh->mNumFaces * 3u);
-			
-			
 			for (auto& uvs : vertexData.uvs)
 			{
 				uvs.resize(aiMesh->mNumVertices);
 			}
+			vertexData.indices.resize(aiMesh->mNumFaces * 3u);
 
 			alloc += sw.elapsed();
 			sw.start();
@@ -278,7 +276,10 @@ bool Mesh::load()
 			{
 				auto& face = aiMesh->mFaces[fi];
 				assert(face.mNumIndices == 3);
-				std::memcpy(&vertexData.indices[fi], face.mIndices, 3);
+				vertexData.indices[fi * 3 ]		= (face.mIndices[0]);
+				vertexData.indices[fi * 3 + 1]	= (face.mIndices[1]);
+				vertexData.indices[fi * 3 + 2]	= (face.mIndices[2]);
+				//std::memcpy(&vertexData.indices[fi], face.mIndices, 3 * sizeof(unsigned int));
 			}
 
 			addSubMesh(std::move(vertexData), nullptr);
@@ -293,6 +294,7 @@ bool Mesh::load()
 	{
 		std::cerr << "Failed to load mesh from '" << getAssetPath() << "'. Assimp error: " << importer.GetErrorString() << std::endl;;
 	}
+
 	return false;
 }
 
@@ -313,24 +315,3 @@ SubMesh* Mesh::addSubMesh(SubMeshVertexData&& vertexData, Material * material)
 {
 	return this->subMeshes.emplace_back(new SubMesh(std::move(vertexData), material)).get();
 }
-
-
-
-
-//RenderObject toRenderObject(const SubMesh* subMesh)
-//{
-//	return RenderObject{
-//		nullptr,
-//		nullptr,
-//		[vbo = subMesh->getVertexArrayObject(), count = subMesh->getVertexData().indices.size()]()
-//		{
-//			glBindVertexArray(vbo);
-//			glDrawElements(
-//				GL_TRIANGLES,		// mode
-//				count,				// count
-//				GL_UNSIGNED_INT,	// type
-//				(void*)0			// element array buffer offset
-//			);
-//			}
-//	};
-//}

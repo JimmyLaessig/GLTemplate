@@ -244,47 +244,47 @@ int main(int, char**)
 	}
 
 
-	auto mesh = SharedAsset::New<Mesh>("sibenik-cathedral-vray.obj");
+	auto mesh = SharedAsset::FromFile<Mesh>("sibenik-cathedral-vray.obj");
 	
-	SubMeshVertexData data;
-	data.positions = {
-	   {-1.0, -1.0,  2.0},
-	   { 1.0, -1.0,  2.0},
-	   { 1.0,  1.0,  2.0},
-	   {-1.0,  1.0,  2.0},
-	   {-1.0, -1.0, -2.0},
-	   { 1.0, -1.0, -2.0},
-	   { 1.0,  1.0, -2.0},
-	   {-1.0,  1.0, -2.0}
-	};
-	
-	data.indices = {
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-	};
-	data.normals	= std::vector<glm::vec3>(8);
-	data.tangents	= std::vector<glm::vec3>(8);
-	data.bitangents = std::vector<glm::vec3>(8);
-	data.colors		= std::vector<glm::vec4>(8);
-	data.uvs.push_back(std::vector<glm::vec3>(8));
+	//SubMeshVertexData data;
+	//data.positions = {
+	//   {-1.0, -1.0,  2.0},
+	//   { 1.0, -1.0,  2.0},
+	//   { 1.0,  1.0,  2.0},
+	//   {-1.0,  1.0,  2.0},
+	//   {-1.0, -1.0, -2.0},
+	//   { 1.0, -1.0, -2.0},
+	//   { 1.0,  1.0, -2.0},
+	//   {-1.0,  1.0, -2.0}
+	//};
+	//
+	//data.indices = {
+	//	// front
+	//	0, 1, 2,
+	//	2, 3, 0,
+	//	// right
+	//	1, 5, 6,
+	//	6, 2, 1,
+	//	// back
+	//	7, 6, 5,
+	//	5, 4, 7,
+	//	// left
+	//	4, 0, 3,
+	//	3, 7, 4,
+	//	// bottom
+	//	4, 5, 1,
+	//	1, 0, 4,
+	//	// top
+	//	3, 2, 6,
+	//	6, 7, 3
+	//};
+	//data.normals	= std::vector<glm::vec3>(8);
+	//data.tangents	= std::vector<glm::vec3>(8);
+	//data.bitangents = std::vector<glm::vec3>(8);
+	//data.colors		= std::vector<glm::vec4>(8);
+	//data.uvs.push_back(std::vector<glm::vec3>(8));
 
-	mesh->addSubMesh(data, nullptr);	
+	//mesh->addSubMesh(data, nullptr);	
 	
 	Camera camera;
 	CameraController controller;
@@ -338,35 +338,43 @@ int main(int, char**)
 			camera.getViewMatrix(),
 			glm::perspective(glm::radians(90.0f), (float)display_w / (float)display_h, 0.1f, 1000.0f)
 		};
-		
-		RenderObject ro(
-			mesh->subMeshes[0].get(),
-			transformRed,
-			shaderBlue.get(),
-			nullptr,
-			0
+		for (auto& sm : mesh->subMeshes)
+		{
+			RenderObject ro(
+				sm.get(),
+				transformRed,
+				shaderBlue.get(),
+				nullptr,
+				0
 			);
 
-		GpuResourceBackend::get()->getRenderer()->submitOneTimeRenderObject(ro);
-		info.time2 = sw.elapsed(); sw.start();
+			GpuResourceBackend::get()->getRenderer()->submitOneTimeRenderObject(ro);
+		}
+		stopwatch::Stopwatch renderJobStopWatch;
+		renderJobStopWatch.start();
 		GpuResourceBackend::get()->getRenderer()->executeRenderJobs(rw);
+		info.time0 = renderJobStopWatch.elapsed();
 		
 
 		auto error = glGetError();
+
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		
 		info.frameTimeCPU = deltaTime;
+
+		info.time4 = sw.elapsed(); sw.start();
 		PerformanceOverlay(info);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		info.time3 = sw.elapsed(); sw.start();
+
+		
 		glfwSetWindowTitle(window, std::to_string(deltaTime).c_str());
+		
         glfwSwapBuffers(window);
 
-		info.time4 = sw.elapsed(); sw.start();
     }
 
 	//SharedAsset<GLSLShader>::AssetCache.clear();
