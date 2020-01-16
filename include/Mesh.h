@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include "Material.h"
-#include "GL/glew.h"
+#include "GL.h"
 #include "glm/glm.hpp"
 #include "GpuResource.h"
 #include "SharedAsset.h"
@@ -86,9 +86,13 @@ public:
 	
 	std::function<void()> getDrawCall() const override
 	{
-		return [vbo = getVertexArrayObject(), count = (GLsizei)getVertexData().indices.size()]()
+		return [vao = getVertexArrayObject(), count = (GLsizei)getVertexData().indices.size()]()
 		{
-			glBindVertexArray(vbo);
+			glBindVertexArray(vao);
+			if (glGetError() != GL_NO_ERROR)
+			{
+				std::cout << "error" << std::endl;
+			}
 			glDrawElements(
 				GL_TRIANGLES,		// mode
 				count,				// count
@@ -118,11 +122,11 @@ private:
 
 	std::string name = "";
 
-	SubMeshVertexData vertexData;
+	SubMeshVertexData vertexData = {};
       
-    Material* material;
+    Material* material = nullptr;
 	
-	GLuint VAO;
+	GLuint VAO = 0u;
 
 	std::vector<GLuint> VBOs;
 

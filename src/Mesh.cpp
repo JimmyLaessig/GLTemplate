@@ -5,7 +5,7 @@
 #include <assimp/scene.h> 
 #include <assimp/postprocess.h>
 #include <Stopwatch.h>
-
+#include <optional>
 #include "GL/glew.h"
 
 
@@ -107,6 +107,73 @@ void SubMesh::freeGpuMemory_Internal()
 	// Delete previously allocated buffers
 	glDeleteBuffers((GLsizei)VBOs.size(), VBOs.data());
 	glDeleteVertexArrays(1, &VAO);
+
+	getGLInternalPixelFormat<glm::vec3>();
+
+}
+
+
+
+
+
+template<class VectorType>
+GLuint createVertexBufferObject(const std::vector<VectorType>& vertexData, const std::optional<std::tuple<GLuint, GLuint>> vao_and_attributeIndex = {})
+{
+	auto type			= getGLDataType<decltype(VectorType().x)>();
+	auto numVertices	= vertexData.size();
+	auto numBytes		= sizeof(VectorType);
+	auto numChannels	= VectorType::length();
+
+	// Bind vao and setup vertex attribute pointer
+	if (vao_and_attributeIndex)
+	{
+		auto[vao, atributeIndex] = *vao_and_attributeIndex;
+		glBindVertexArray(vao);
+		
+	}
+
+	GLuint handle = 0;
+	glGenBuffers(1u, &handle);
+	glBindBuffer(GL_ARRAY_BUFFER, handle);
+	glBufferData(GL_ARRAY_BUFFER, numVertices * numBytes, &vertexData[0], GL_STATIC_DRAW);
+
+	// Unbind VAO
+	if (vao_and_attributeIndex)
+	{
+		auto[vao, atributeIndex] = *vao_and_attributeIndex;
+		glEnableVertexAttribArray(atributeIndex);
+		glVertexAttribPointer(atributeIndex, numChannels, type, GL_FALSE, 0, 0);
+
+		glBindVertexArray(0);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	return handle;
+}
+
+
+GLuint createIndexBufferObject(const std::vector<unsigned int>& indices, std::optional<GLuint> vao = {})
+{	
+	if (vao)
+	{
+		glBindVertexArray(vao.value());
+	}
+
+	// Number of Indices
+	auto numIndices = indices.size();
+
+	GLuint handle = 0;
+	glGenBuffers(1u, &handle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+	// Unbind VAO
+	if (vao)
+	{
+		glBindVertexArray(0);
+	}
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	return handle;
 }
 
 
@@ -114,12 +181,25 @@ void SubMesh::updateGpuMemory_Internal()
 {
 	freeGpuMemory_Internal();
 
+	if (glGetError() != GL_NO_ERROR)
+	{
+		std::cout << "error" << std::endl;
+	}
+
 	auto numVertices = vertexData.positions.size();
 	auto bufferIndex = 0u;
 
 	// Generate OpenGL Vertex Array
 	glGenVertexArrays(1, &VAO);
+	if (glGetError() != GL_NO_ERROR)
+	{
+		std::cout << "error" << std::endl;
+	}
 	glBindVertexArray(VAO);
+	if (glGetError() != GL_NO_ERROR)
+	{
+		std::cout << "error" << std::endl;
+	}
 		
 	// Positions	= 0
 	// Normals		= 1
@@ -129,69 +209,32 @@ void SubMesh::updateGpuMemory_Internal()
 	// UVs			= 5..
 	// Indices		= Last
 	// Generate OpenGL Buffers
-	VBOs.resize(6 + vertexData.uvs.size(), 0u);
-	glGenBuffers((GLsizei)VBOs.size(), VBOs.data());
-
-		
-	// Fill Position Buffer
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.positions[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		bufferIndex++;
-	}
-	
-	// Fill Normal Buffer
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.normals[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		bufferIndex++;
-	}
-	// Fill Tangent Buffer
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &vertexData.tangents[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		bufferIndex++;
-	}
-	// Fill Bitangent Buffer
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3),&vertexData.bitangents[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 3, GL_FLOAT, GL_FALSE, 0, 0);
-		bufferIndex++;
-	}
+	VBOs.reserve(6 + vertexData.uvs.size());
+	// Position Buffer
+	VBOs.push_back(createVertexBufferObject(vertexData.positions, std::make_tuple(VAO, bufferIndex++)));
+	// Normal Buffer
+	VBOs.push_back(createVertexBufferObject(vertexData.normals, std::make_tuple(VAO, bufferIndex++)));
+	// Tangent Buffer
+	VBOs.push_back(createVertexBufferObject(vertexData.tangents, std::make_tuple(VAO, bufferIndex++)));
+	// Bitangent Buffer
+	VBOs.push_back(createVertexBufferObject(vertexData.bitangents, std::make_tuple(VAO, bufferIndex++)));
 	// Fill Color Buffer
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec4), &vertexData.colors[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 4, GL_FLOAT, GL_FALSE, 0, 0);
-		bufferIndex++;
-	}
+	VBOs.push_back(createVertexBufferObject(vertexData.colors, std::make_tuple(VAO, bufferIndex++)));
 	// Fill UV Buffer(s)
 	for (auto& uvs : vertexData.uvs)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), &uvs[0], GL_STATIC_DRAW);
-		glEnableVertexAttribArray(bufferIndex);
-		glVertexAttribPointer(bufferIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
-		bufferIndex++;
+		VBOs.push_back(createVertexBufferObject(uvs, std::make_tuple(VAO, bufferIndex++)));
 	}
 	
 	// Fill Index Buffer
-	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBOs[bufferIndex]);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexData.indices.size() * sizeof(unsigned int), &vertexData.indices[0], GL_STATIC_DRAW);
-	}
-	
+	VBOs.push_back(createIndexBufferObject(vertexData.indices, VAO));
+
 
 	glBindVertexArray(0);
+	if (glGetError() != GL_NO_ERROR)
+	{
+		std::cout << "error" << std::endl;
+	}
 }
 
 
@@ -215,6 +258,7 @@ Material * SubMesh::getMaterial()
 
 bool Mesh::load()
 {
+	
 	static_assert(sizeof(glm::vec3) == sizeof(aiVector3D));
 	static_assert(sizeof(glm::vec4) == sizeof(aiColor4D));
 	

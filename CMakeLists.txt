@@ -23,12 +23,12 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "src/*.cpp")
 set (SOURCES
 	${sources} 
 	${headers}
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-    ${imgui_SOURCE_DIR}/imgui_demo.cpp
-    ${imgui_SOURCE_DIR}/examples/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
+    	${imgui_SOURCE_DIR}/imgui.cpp
+    	${imgui_SOURCE_DIR}/imgui_draw.cpp
+    	${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    	${imgui_SOURCE_DIR}/imgui_demo.cpp
+    	${imgui_SOURCE_DIR}/examples/imgui_impl_glfw.cpp
+    	${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
 )
 
 
@@ -62,23 +62,18 @@ set(LIBRARIES
 )
 target_link_libraries(${PROJECT} ${LIBRARIES})
 
-#add_custom_command(TARGET ${PROJECT} POST_BUILD        
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different  		
-#        ${CMAKE_CURRENT_BINARY_DIR}/bin/glewd.dll
-#        ${CMAKE_CURRENT_BINARY_DIR}/glewd.dll)
+
+add_custom_command(TARGET ${PROJECT} POST_BUILD        
+   COMMAND ${CMAKE_COMMAND} -E copy_directory		
+	${CMAKE_SOURCE_DIR}/Assets/
+	${CMAKE_CURRENT_BINARY_DIR}/Assets/)
 
 
-
-#add_custom_command(TARGET ${PROJECT} POST_BUILD        
-#   COMMAND ${CMAKE_COMMAND} -E copy_if_different  		
-#        ${glfw_BINARY_DIR}/src/glfw3.dll
-#        ${CMAKE_CURRENT_BINARY_DIR}/glfw3.dll)
+INSTALL( TARGETS ${PROJECT} ARCHIVE DESTINATION lib
+		            		LIBRARY DESTINATION lib
+                            RUNTIME DESTINATION bin )
 
 
-#INSTALL( TARGETS ${PROJECT} ARCHIVE DESTINATION lib#
-#		                    LIBRARY DESTINATION lib
-#                            RUNTIME DESTINATION bin )
-                                        
 #set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/install" CACHE PATH "default install prefix" FORCE)
 
 #install(CODE "file(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/*)")

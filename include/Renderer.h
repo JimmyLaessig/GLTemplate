@@ -78,6 +78,7 @@ private:
 	bool bisIsActive = true;
 };
 
+
 struct RenderView
 {
 	glm::mat4 viewMatrix;

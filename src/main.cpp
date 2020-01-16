@@ -3,41 +3,33 @@
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan graphics context creation, etc.)
 
 #include "imgui.h"
-#include "examples/imgui_impl_glfw.h"
-#include "examples/imgui_impl_opengl3.h"
+
 #include <stdio.h>
-#include "Stopwatch.h"
-#include "GLSLShader.h"
-#include "Mesh.h"
+
 #include <iostream>
 #include <functional>
 #include <numeric>
-#include "CameraController.h"
-#include "GpuResourceBackend.h"
 #include <set>
-#include "Renderer.h"
-#include "Input.h"
-// About Desktop OpenGL function loaders:
-//  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
-//  Helper libraries are often used for this purpose! Here we are supporting a few common ones (gl3w, glew, glad).
-//  You may use another loader/header of your choice (glext, glLoadGen, etc.), or chose to manually implement your own.
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-#include <GL/gl3w.h>    // Initialize with gl3wInit()
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-#include <GL/glew.h>    // Initialize with glewInit()
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-#include <glad/glad.h>  // Initialize with gladLoadGL()
-#else
-#include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
-#endif
-
-// Include glfw3.h after our OpenGL definitions
-#include <GLFW/glfw3.h>
 #include<string>
 
+#include "GL/glew.h"
+// Include glfw3.h after our OpenGL definitions
+#include <GLFW/glfw3.h>
+
+
+#include "Stopwatch.h"
+#include "GLSLShader.h"
+#include "Mesh.h"
+#include "CameraController.h"
+#include "GpuResourceBackend.h"
+#include "Renderer.h"
+#include "Input.h"
+#include "UI.h"
 #include "glm/gtx/string_cast.hpp"
 #include "Transform.h"
 #include "Camera.h"
+
+
 #define GLM_FORCE_RADIANS
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -54,37 +46,18 @@ static void glfw_error_callback(int error, const char* description)
 
 struct PerformanceInfo
 {
-    float frameTimeGPU = 0;
-    float frameTimeCPU = 0;
-    unsigned int memoryUsageGPU;
-    unsigned int memoryUsageCPU;
-    unsigned int numPrimitives;
-    unsigned int numDrawCalls;
-
-	float time0;
-	float time1;
-	float time2;
-	float time3;
-	float time4;
+	float frameTime			= 0;
+    float frameTimeGPU		= 0;
+    unsigned int numRenderObjects;
 };
 
 
 void PerformanceOverlay(const PerformanceInfo& info)
 {
     ImGui::Begin("Stats");  
-	ImGui::Text("time0: %.5f ms", info.time0);
-	ImGui::Text("time1: %.5f ms", info.time1);
-	ImGui::Text("time2: %.5f ms", info.time2);
-	ImGui::Text("time3: %.5f ms", info.time3);
-	ImGui::Text("time4: %.5f ms", info.time4);
-	ImGui::Text("Frame Time(CPU): %.5f ms", 1000.f * info.frameTimeCPU);
-/*    ImGui::Text("Frame Time(GPU): %.5f ms", 1000.f * info.frameTimeGPU);
-    ImGui::Text("Frame Time(CPU): %.5f ms", 1000.f * info.frameTimeCPU);
-
-    ImGui::Text("Memory used(GPU): MBytes");     
-    ImGui::Text("Memory used(CPU): MBytes");  
-    ImGui::Text("#Primitives: ");     
-    ImGui::Text("#Draw calls: ");    */ 
+	ImGui::Text("Frame Time(CPU): %.5f ms", info.frameTime);
+	ImGui::Text("Frame Time(GPU): %.5f ms", info.frameTimeGPU);
+	ImGui::Text("#render objects: ", info.numRenderObjects);
     ImGui::End();
 }
 
@@ -119,32 +92,33 @@ int main(int, char**)
 
     // Create window with graphics context
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window);
     //glfwSwapInterval(1); // Enable vsync
 	Input::init(window);
     // Initialize OpenGL loader
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-    bool err = gl3wInit() != 0;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
+//#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
+//    bool err = gl3wInit() != 0;
+//#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
     bool err = glewInit() != GLEW_OK;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-    bool err = gladLoadGL() == 0;
-#else
-    bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
-#endif
+//#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+//    bool err = gladLoadGL() == 0;
+//#else
+//    bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
+//#endif
     if (err)
     {
 		std::cerr << "Failed to initialize OpenGL loader!" << std::endl;
         return 1;
     }
 
-	
+	std::unique_ptr<UI> ui = std::unique_ptr<UI>(new UI(window));
 	
     //Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	//IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
 
 
     //ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -154,7 +128,7 @@ int main(int, char**)
     // Setup Dear ImGui style
 
 
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
 
 
    // ImGui::StyleColorsClassic();
@@ -162,8 +136,8 @@ int main(int, char**)
     // Setup Platform/Renderer bindings
 
 
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+	//ImGui_ImplGlfw_InitForOpenGL(window, true);
+	//ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -192,10 +166,14 @@ int main(int, char**)
 	//	std::cout << "asdasdasd" << std::endl;
 	//});
 	
-
+	auto x1 = getGLPixelFormat<glm::vec3>();
+	auto x2 = getGLPixelFormat<glm::vec2>();
+	auto x3 = getGLPixelFormat<glm::dvec2>();
+	auto x4 = getGLPixelFormat<glm::uvec4>();
+	auto x5 = getGLPixelFormat<glm::vec1>();
+   
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 
 	//auto shader = SharedAsset::FromFile<GLSLShader>("effect.glsl");
 
@@ -244,47 +222,47 @@ int main(int, char**)
 	}
 
 
-	auto mesh = SharedAsset::FromFile<Mesh>("sibenik-cathedral-vray.obj");
+	auto mesh = SharedAsset::New<Mesh>("sibenik-cathedral-vray.obj");
 	
-	//SubMeshVertexData data;
-	//data.positions = {
-	//   {-1.0, -1.0,  2.0},
-	//   { 1.0, -1.0,  2.0},
-	//   { 1.0,  1.0,  2.0},
-	//   {-1.0,  1.0,  2.0},
-	//   {-1.0, -1.0, -2.0},
-	//   { 1.0, -1.0, -2.0},
-	//   { 1.0,  1.0, -2.0},
-	//   {-1.0,  1.0, -2.0}
-	//};
-	//
-	//data.indices = {
-	//	// front
-	//	0, 1, 2,
-	//	2, 3, 0,
-	//	// right
-	//	1, 5, 6,
-	//	6, 2, 1,
-	//	// back
-	//	7, 6, 5,
-	//	5, 4, 7,
-	//	// left
-	//	4, 0, 3,
-	//	3, 7, 4,
-	//	// bottom
-	//	4, 5, 1,
-	//	1, 0, 4,
-	//	// top
-	//	3, 2, 6,
-	//	6, 7, 3
-	//};
-	//data.normals	= std::vector<glm::vec3>(8);
-	//data.tangents	= std::vector<glm::vec3>(8);
-	//data.bitangents = std::vector<glm::vec3>(8);
-	//data.colors		= std::vector<glm::vec4>(8);
-	//data.uvs.push_back(std::vector<glm::vec3>(8));
+	SubMeshVertexData data;
+	data.positions = {
+	   {-1.0, -1.0,  2.0},
+	   { 1.0, -1.0,  2.0},
+	   { 1.0,  1.0,  2.0},
+	   {-1.0,  1.0,  2.0},
+	   {-1.0, -1.0, -2.0},
+	   { 1.0, -1.0, -2.0},
+	   { 1.0,  1.0, -2.0},
+	   {-1.0,  1.0, -2.0}
+	};
+	
+	data.indices = {
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// right
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// left
+		4, 0, 3,
+		3, 7, 4,
+		// bottom
+		4, 5, 1,
+		1, 0, 4,
+		// top
+		3, 2, 6,
+		6, 7, 3
+	};
+	data.normals	= std::vector<glm::vec3>(8, glm::vec3(0));
+	data.tangents	= std::vector<glm::vec3>(8, glm::vec3(0));
+	data.bitangents = std::vector<glm::vec3>(8, glm::vec3(0));
+	data.colors		= std::vector<glm::vec4>(8, glm::vec4(0));
+	data.uvs.push_back(std::vector<glm::vec3>(8, glm::vec3(0)));
 
-	//mesh->addSubMesh(data, nullptr);	
+	mesh->addSubMesh(data, nullptr);	
 	
 	Camera camera;
 	CameraController controller;
@@ -297,92 +275,85 @@ int main(int, char**)
 	transformRed.setPosition({ 0, -3, 0 });
 	transformBlue.setPosition({ 0, 3, 0 });
 
+	PerformanceInfo perfInfo;
+
 	float lastTime = (float)glfwGetTime();
+	int display_w, display_h;
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
-		stopwatch::Stopwatch sw;
-		sw.start();
-
+		
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
         // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
         // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
+		glfwGetFramebufferSize(window, &display_w, &display_h);
 
+		// Calculate delta time
 		float time = (float)glfwGetTime();
 		float deltaTime = time - lastTime;
 		lastTime = time;
-
-		PerformanceInfo info;	
-		
+		perfInfo.frameTime = deltaTime * 1000.f;
+		// Temporary update code
+		ui->update(deltaTime);
 		GpuResourceBackend::get()->update(deltaTime);
-
-		info.time0 = sw.elapsed();
-		sw.start();
 		controller.update(deltaTime);
 
+		// Test UI
+		PerformanceOverlay(perfInfo);
         
-        int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
+		// Render prep code
         glViewport(0, 0, display_w, display_h);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
 		//glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
-		info.time1 = sw.elapsed(); sw.start();
-		RenderView rw
-		{
-			camera.getViewMatrix(),
-			glm::perspective(glm::radians(90.0f), (float)display_w / (float)display_h, 0.1f, 1000.0f)
-		};
-		for (auto& sm : mesh->subMeshes)
-		{
-			RenderObject ro(
-				sm.get(),
-				transformRed,
-				shaderBlue.get(),
-				nullptr,
-				0
-			);
 
-			GpuResourceBackend::get()->getRenderer()->submitOneTimeRenderObject(ro);
+		if (auto renderer = GpuResourceBackend::get()->getRenderer())
+		{
+			// Create the render view for this frame
+			RenderView rw
+			{
+				camera.getViewMatrix(),
+				glm::perspective(glm::radians(90.0f), (float)display_w / (float)display_h, 0.1f, 1000.0f)
+			};
+			stopwatch::Stopwatch gpuWatch;
+			gpuWatch.start();
+			// Temporary code to construct render objects each frame
+			renderer->submitOneTimeRenderObject(ui->toRenderObject());
+			unsigned int numRenderObjects = 1;
+			for (auto& sm : mesh->subMeshes)
+			{
+				RenderObject ro(
+					sm.get(),
+					transformRed,
+					shaderBlue.get(),
+					nullptr,
+					0
+				);
+				numRenderObjects++;
+				renderer->submitOneTimeRenderObject(ro);
+			}
+			
+			// Execute all render jobs
+			renderer->executeRenderJobs(rw);
+			perfInfo.frameTimeGPU = (float)gpuWatch.elapsed();
+			perfInfo.numRenderObjects = numRenderObjects;
 		}
-		stopwatch::Stopwatch renderJobStopWatch;
-		renderJobStopWatch.start();
-		GpuResourceBackend::get()->getRenderer()->executeRenderJobs(rw);
-		info.time0 = renderJobStopWatch.elapsed();
 		
 
 		auto error = glGetError();
 
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		
-		info.frameTimeCPU = deltaTime;
-
-		info.time4 = sw.elapsed(); sw.start();
-		PerformanceOverlay(info);
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		
-		glfwSetWindowTitle(window, std::to_string(deltaTime).c_str());
-		
         glfwSwapBuffers(window);
-
     }
 
 	//SharedAsset<GLSLShader>::AssetCache.clear();
 
     // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+
 
     glfwDestroyWindow(window);
     glfwTerminate();

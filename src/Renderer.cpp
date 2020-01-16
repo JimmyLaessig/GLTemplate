@@ -87,17 +87,20 @@ void Renderer::executeRenderJobs(const RenderView & view)
 	//});
 	
 	// Execute each RenderObject
+
 	for (auto& ro : oneTimeRenderObjects)
 	{
-		if (ro.drawable && ro.shader)
+		if (ro.drawable)
 		{
-			ro.shader->bind();
-			auto worldMatrix = ro.transform.getLocalToWorldMatrix();
-			auto normalMatrix = ro.transform.getLocalToWorldNormalMatrix();
-			
-			auto worldViewProjectionMatrix = view.projectionMatrix * view.viewMatrix * worldMatrix;
-			glUniformMatrix4fv(glGetUniformLocation(ro.shader->programHandle, "WorldViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(worldViewProjectionMatrix));
-			
+			if (ro.shader)
+			{
+				ro.shader->bind();
+				auto worldMatrix = ro.transform.getLocalToWorldMatrix();
+				auto normalMatrix = ro.transform.getLocalToWorldNormalMatrix();
+
+				auto worldViewProjectionMatrix = view.projectionMatrix * view.viewMatrix * worldMatrix;
+				glUniformMatrix4fv(glGetUniformLocation(ro.shader->programHandle, "WorldViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(worldViewProjectionMatrix));
+			}
 			ro.drawable->getDrawCall()();
 		}
 	}
@@ -109,6 +112,7 @@ void Renderer::executeRenderJobs(const RenderView & view)
 //	}
 }
 
+
 RenderObject::RenderObject(DrawableGpuResource * drawable, Transform transform, GLSLShader * shader, UniformCollection * uniforms, int renderPass):
 	drawable(drawable),
 	transform(transform),
@@ -117,6 +121,7 @@ RenderObject::RenderObject(DrawableGpuResource * drawable, Transform transform, 
 	renderPass(renderPass)
 {}
 
+
 RenderObject::RenderObject(const RenderObject & other) :
 	drawable(other.drawable),
 	transform(other.transform),
@@ -124,6 +129,7 @@ RenderObject::RenderObject(const RenderObject & other) :
 	uniforms(other.uniforms),
 	renderPass(other.renderPass)
 {}
+
 
 RenderObject::RenderObject(RenderObject && other):
 	drawable(std::move(other.drawable)),
