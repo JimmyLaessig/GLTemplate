@@ -18,17 +18,20 @@
 
 
 #include "Stopwatch.h"
-#include "GLSLShader.h"
-#include "Mesh.h"
+#include "Rendering/GL/GLSLShader.h"
+#include "Rendering/Mesh.h"
 #include "CameraController.h"
-#include "GpuResourceBackend.h"
-#include "Renderer.h"
-#include "Input.h"
-#include "UI.h"
+#include "Rendering/GpuResourceBackend.h"
+#include "Rendering/Renderer.h"
+#include "Application/Input.h"
+#include "Application/UI.h"
 #include "glm/gtx/string_cast.hpp"
 #include "Transform.h"
-#include "Camera.h"
+#include "Rendering/Camera.h"
+#include "Application/Window.h"
 
+
+#include "Application/GLFW/GLFWWindow.h"
 
 #define GLM_FORCE_RADIANS
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -97,7 +100,7 @@ int main(int, char**)
         return 1;
     glfwMakeContextCurrent(window);
     //glfwSwapInterval(1); // Enable vsync
-	Input::init(window);
+	//Input::init(window);
     // Initialize OpenGL loader
 //#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 //    bool err = gl3wInit() != 0;
@@ -166,11 +169,11 @@ int main(int, char**)
 	//	std::cout << "asdasdasd" << std::endl;
 	//});
 	
-	auto x1 = getGLPixelFormat<glm::vec3>();
+	/*auto x1 = getGLPixelFormat<glm::vec3>();
 	auto x2 = getGLPixelFormat<glm::vec2>();
 	auto x3 = getGLPixelFormat<glm::dvec2>();
 	auto x4 = getGLPixelFormat<glm::uvec4>();
-	auto x5 = getGLPixelFormat<glm::vec1>();
+	auto x5 = getGLPixelFormat<glm::vec1>();*/
    
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -224,7 +227,7 @@ int main(int, char**)
 
 	auto mesh = SharedAsset::New<Mesh>("sibenik-cathedral-vray.obj");
 	
-	SubMeshVertexData data;
+	IndexedGeometryData data;
 	data.positions = {
 	   {-1.0, -1.0,  2.0},
 	   { 1.0, -1.0,  2.0},

@@ -49,6 +49,7 @@ target_include_directories(${PROJECT} PUBLIC
 	${assimp_SOURCE_DIR}/include
     ${glm_SOURCE_DIR}
     ${imgui_SOURCE_DIR}
+	${stduuid_SOURCE_DIR}/include
 )
 
 	#${stduuid_SOURCE_DIR}/include

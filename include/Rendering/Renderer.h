@@ -2,7 +2,7 @@
 #include <set>
 #include <functional>
 #include "Transform.h"
-#include "GLSLShader.h"
+#include "Rendering/GL/GLSLShader.h"
 
 struct RenderObject
 {

@@ -1,4 +1,4 @@
-#include "Camera.h"
+#include "Rendering/Camera.h"
 
 
 Camera::Camera(const Camera & other)

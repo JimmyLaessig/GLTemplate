@@ -1,5 +1,5 @@
-#include "GpuResource.h"
-#include "GpuResourceBackend.h"
+#include "Rendering/GpuResource.h"
+#include "Rendering/GpuResourceBackend.h"
 //GpuResource::GpuResource(GpuResource && other) noexcept : 
 //	bIsOutdated(other.bIsOutdated), 
 //	gpuResourceLock(std::move(other.getResourceLock))

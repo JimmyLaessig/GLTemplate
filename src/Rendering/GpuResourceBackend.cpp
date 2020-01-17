@@ -1,6 +1,6 @@
-#include "GpuResourceBackend.h"
-#include "GpuResource.h"
-#include "Renderer.h"
+#include "Rendering/GpuResourceBackend.h"
+#include "Rendering/GpuResource.h"
+#include "Rendering/Renderer.h"
 
 bool GpuResourceBackend::registerResource(GpuResource* res)
 {

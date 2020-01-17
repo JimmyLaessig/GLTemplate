@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "Rendering/Mesh.h"
 #include <algorithm>
 #include <assert.h>
 #include <assimp/Importer.hpp>
@@ -9,7 +9,7 @@
 #include "GL/glew.h"
 
 
-SubMeshVertexData::SubMeshVertexData(const SubMeshVertexData & other) :
+IndexedGeometryData::IndexedGeometryData(const IndexedGeometryData & other) :
 	positions(other.positions),
 	normals(other.normals),
 	tangents(other.tangents),
@@ -20,7 +20,7 @@ SubMeshVertexData::SubMeshVertexData(const SubMeshVertexData & other) :
 {}
 
 
-SubMeshVertexData::SubMeshVertexData(SubMeshVertexData && other) :
+IndexedGeometryData::IndexedGeometryData(IndexedGeometryData && other) :
 	positions(std::move(other.positions)),
 	normals(std::move(other.normals)),
 	tangents(std::move(other.tangents)),
@@ -31,7 +31,7 @@ SubMeshVertexData::SubMeshVertexData(SubMeshVertexData && other) :
 {}
 
 
-SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other)
+IndexedGeometryData & IndexedGeometryData::operator=(const IndexedGeometryData & other)
 {
 	this->positions		= other.positions;
 	this->normals		= other.normals;
@@ -45,7 +45,7 @@ SubMeshVertexData & SubMeshVertexData::operator=(const SubMeshVertexData & other
 }
 
 
-SubMeshVertexData & SubMeshVertexData::operator=(SubMeshVertexData && other)
+IndexedGeometryData & IndexedGeometryData::operator=(IndexedGeometryData && other)
 {
 	this->positions		= std::move(other.positions);
 	this->normals		= std::move(other.normals);
@@ -71,7 +71,7 @@ SubMeshVertexData & SubMeshVertexData::operator=(SubMeshVertexData && other)
 //	}
 
 
-SubMesh::SubMesh(const SubMeshVertexData& vertexData, Material* material) :
+IndexedGeometry::IndexedGeometry(const IndexedGeometryData& vertexData, Material* material) :
 	vertexData(vertexData),
 	material(material)
 {
@@ -79,7 +79,7 @@ SubMesh::SubMesh(const SubMeshVertexData& vertexData, Material* material) :
 }
 
 
-SubMesh::SubMesh(SubMeshVertexData&& vertexData, Material* material) : 
+IndexedGeometry::IndexedGeometry(IndexedGeometryData&& vertexData, Material* material) :
 	vertexData(std::move(vertexData)),
 	material(material)
 {
@@ -88,13 +88,13 @@ SubMesh::SubMesh(SubMeshVertexData&& vertexData, Material* material) :
 
 
 
-SubMesh::~SubMesh()
+IndexedGeometry::~IndexedGeometry()
 {
 	freeGpuMemory();
 }
 
 
-void SubMesh::setMaterial(Material * material)
+void IndexedGeometry::setMaterial(Material * material)
 {
 	getResourceLock().lock();
 	this->material = material;
@@ -102,155 +102,20 @@ void SubMesh::setMaterial(Material * material)
 }
 
 
-void SubMesh::freeGpuMemory_Internal()
-{
-	// Delete previously allocated buffers
-	glDeleteBuffers((GLsizei)VBOs.size(), VBOs.data());
-	glDeleteVertexArrays(1, &VAO);
-
-	getGLInternalPixelFormat<glm::vec3>();
-
-}
 
 
 
 
 
-template<class VectorType>
-GLuint createVertexBufferObject(const std::vector<VectorType>& vertexData, const std::optional<std::tuple<GLuint, GLuint>> vao_and_attributeIndex = {})
-{
-	auto type			= getGLDataType<decltype(VectorType().x)>();
-	auto numVertices	= vertexData.size();
-	auto numBytes		= sizeof(VectorType);
-	auto numChannels	= VectorType::length();
-
-	// Bind vao and setup vertex attribute pointer
-	if (vao_and_attributeIndex)
-	{
-		auto[vao, atributeIndex] = *vao_and_attributeIndex;
-		glBindVertexArray(vao);
-		
-	}
-
-	GLuint handle = 0;
-	glGenBuffers(1u, &handle);
-	glBindBuffer(GL_ARRAY_BUFFER, handle);
-	glBufferData(GL_ARRAY_BUFFER, numVertices * numBytes, &vertexData[0], GL_STATIC_DRAW);
-
-	// Unbind VAO
-	if (vao_and_attributeIndex)
-	{
-		auto[vao, atributeIndex] = *vao_and_attributeIndex;
-		glEnableVertexAttribArray(atributeIndex);
-		glVertexAttribPointer(atributeIndex, numChannels, type, GL_FALSE, 0, 0);
-
-		glBindVertexArray(0);
-	}
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	return handle;
-}
 
 
-GLuint createIndexBufferObject(const std::vector<unsigned int>& indices, std::optional<GLuint> vao = {})
-{	
-	if (vao)
-	{
-		glBindVertexArray(vao.value());
-	}
-
-	// Number of Indices
-	auto numIndices = indices.size();
-
-	GLuint handle = 0;
-	glGenBuffers(1u, &handle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-	// Unbind VAO
-	if (vao)
-	{
-		glBindVertexArray(0);
-	}
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	return handle;
-}
-
-
-void SubMesh::updateGpuMemory_Internal()
-{
-	freeGpuMemory_Internal();
-
-	if (glGetError() != GL_NO_ERROR)
-	{
-		std::cout << "error" << std::endl;
-	}
-
-	auto numVertices = vertexData.positions.size();
-	auto bufferIndex = 0u;
-
-	// Generate OpenGL Vertex Array
-	glGenVertexArrays(1, &VAO);
-	if (glGetError() != GL_NO_ERROR)
-	{
-		std::cout << "error" << std::endl;
-	}
-	glBindVertexArray(VAO);
-	if (glGetError() != GL_NO_ERROR)
-	{
-		std::cout << "error" << std::endl;
-	}
-		
-	// Positions	= 0
-	// Normals		= 1
-	// Tangents		= 2
-	// Bitangents	= 3
-	// Colors		= 4
-	// UVs			= 5..
-	// Indices		= Last
-	// Generate OpenGL Buffers
-	VBOs.reserve(6 + vertexData.uvs.size());
-	// Position Buffer
-	VBOs.push_back(createVertexBufferObject(vertexData.positions, std::make_tuple(VAO, bufferIndex++)));
-	// Normal Buffer
-	VBOs.push_back(createVertexBufferObject(vertexData.normals, std::make_tuple(VAO, bufferIndex++)));
-	// Tangent Buffer
-	VBOs.push_back(createVertexBufferObject(vertexData.tangents, std::make_tuple(VAO, bufferIndex++)));
-	// Bitangent Buffer
-	VBOs.push_back(createVertexBufferObject(vertexData.bitangents, std::make_tuple(VAO, bufferIndex++)));
-	// Fill Color Buffer
-	VBOs.push_back(createVertexBufferObject(vertexData.colors, std::make_tuple(VAO, bufferIndex++)));
-	// Fill UV Buffer(s)
-	for (auto& uvs : vertexData.uvs)
-	{
-		VBOs.push_back(createVertexBufferObject(uvs, std::make_tuple(VAO, bufferIndex++)));
-	}
-	
-	// Fill Index Buffer
-	VBOs.push_back(createIndexBufferObject(vertexData.indices, VAO));
-
-
-	glBindVertexArray(0);
-	if (glGetError() != GL_NO_ERROR)
-	{
-		std::cout << "error" << std::endl;
-	}
-}
-
-
-GLuint SubMesh::getVertexArrayObject() const
-{
-	return VAO;
-}
-
-
-const SubMeshVertexData & SubMesh::getVertexData() const
+const IndexedGeometryData & IndexedGeometry::getVertexData() const
 {
 	return this->vertexData;
 }
 
 
-Material * SubMesh::getMaterial()
+Material * IndexedGeometry::getMaterial()
 {
 	return material;
 }
@@ -278,7 +143,7 @@ bool Mesh::load()
 			auto aiMesh			= pScene->mMeshes[i];
 			stopwatch::Stopwatch sw;
 			sw.start();
-			SubMeshVertexData vertexData;
+			IndexedGeometryData vertexData;
 			vertexData.positions.resize(aiMesh->mNumVertices);
 			vertexData.normals.resize(aiMesh->mNumVertices);
 			vertexData.tangents.resize(aiMesh->mNumVertices);
@@ -349,13 +214,15 @@ bool Mesh::reload()
 }
 
 
-SubMesh* Mesh::addSubMesh(const SubMeshVertexData& vertexData, Material * material)
+IndexedGeometry* Mesh::addSubMesh(const IndexedGeometryData& vertexData, Material * material)
 {
-	return this->subMeshes.emplace_back(new SubMesh(std::move(vertexData), material)).get();
+	// TODO // return this->subMeshes.emplace_back(new GLIndexedGeometry(std::move(vertexData), material)).get();
+	return nullptr;
 }
 
 
-SubMesh* Mesh::addSubMesh(SubMeshVertexData&& vertexData, Material * material)
+IndexedGeometry* Mesh::addSubMesh(IndexedGeometryData&& vertexData, Material * material)
 {
-	return this->subMeshes.emplace_back(new SubMesh(std::move(vertexData), material)).get();
+	//return this->subMeshes.emplace_back(new IndexedGeometry(std::move(vertexData), material)).get();
+	return nullptr;
 }
