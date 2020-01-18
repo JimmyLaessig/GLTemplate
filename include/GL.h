@@ -9,8 +9,10 @@
 
 
 template<typename T>
-constexpr GLenum getGLDataType() { T::unimplemented_function; };
-
+constexpr GLenum getGLDataType() 
+{ 
+	return getGLDataType<decltype(T().x)>();
+};
 
 template<> constexpr GLenum getGLDataType<int8_t>()		{ return GL_BYTE; }
 template<> constexpr GLenum getGLDataType<uint8_t>()	{ return GL_UNSIGNED_BYTE; }
@@ -20,6 +22,8 @@ template<> constexpr GLenum getGLDataType<int32_t>()	{ return GL_INT; }
 template<> constexpr GLenum getGLDataType<uint32_t>()	{ return GL_UNSIGNED_INT; }
 template<> constexpr GLenum getGLDataType<float>()		{ return GL_FLOAT; }
 template<> constexpr GLenum getGLDataType<double>()		{ return GL_DOUBLE; }
+
+
 
 
 template<class PixelType> 

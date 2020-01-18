@@ -89,10 +89,6 @@ public:
 		return [vao = getVertexArrayObject(), count = (GLsizei)getVertexData().indices.size()]()
 		{
 			glBindVertexArray(vao);
-			if (glGetError() != GL_NO_ERROR)
-			{
-				std::cout << "error" << std::endl;
-			}
 			glDrawElements(
 				GL_TRIANGLES,		// mode
 				count,				// count

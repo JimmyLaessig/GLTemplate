@@ -28,7 +28,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "Transform.h"
 #include "Camera.h"
-
+#include "Texture.h"
 
 #define GLM_FORCE_RADIANS
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -171,7 +171,7 @@ int main(int, char**)
 	auto x3 = getGLPixelFormat<glm::dvec2>();
 	auto x4 = getGLPixelFormat<glm::uvec4>();
 	auto x5 = getGLPixelFormat<glm::vec1>();
-   
+	auto x6 = getGLDataType<glm::vec3>() == GL_FLOAT;
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -191,9 +191,10 @@ int main(int, char**)
 		shaderData.fragmentShaderCode =
 			"#version 410 core\n"
 			"layout(location = 0) in vec3 position;\n"
+			"uniform sampler2D tex;\n"
 			"void main()\n"
 			"{\n"
-			"    gl_FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+			"    gl_FragColor = vec4(texture(tex, vec2(0.0f, 0.0f)).rgb, 1.0f);// vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
 			"}\n";
 
 		shaderRed->setShaderStageData(shaderData);
@@ -269,7 +270,7 @@ int main(int, char**)
 	controller.setCamera(&camera);
 
 	camera.transform.setPosition(glm::vec3(-10, 0, 0));
-	
+	Texture2D<glm::u8vec4>tex({ 100, 100 }, glm::u8vec4(255, 0, 255, 255));
 	Transform transformRed;
 	Transform transformBlue;
 	transformRed.setPosition({ 0, -3, 0 });
@@ -325,12 +326,16 @@ int main(int, char**)
 			// Temporary code to construct render objects each frame
 			renderer->submitOneTimeRenderObject(ui->toRenderObject());
 			unsigned int numRenderObjects = 1;
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, tex.handle);
+			glUniform1i(glGetUniformLocation(shaderRed->programHandle, "tex"), 0);
 			for (auto& sm : mesh->subMeshes)
 			{
 				RenderObject ro(
 					sm.get(),
 					transformRed,
-					shaderBlue.get(),
+					shaderRed.get(),
 					nullptr,
 					0
 				);
