@@ -13,28 +13,24 @@ public:
 
 	GLResourceBackend() = default;
 
-
-	virtual Renderer* getRenderer() override;
-
-
 	template<class ...Args>
 	Texture2D* createTexture2D(Args... args)
 	{
-		new GLTexture2D(args);
+		return nullptr;
+		//new GLTexture2D(args...);
 	}
 
 	template<class ...Args>
 	IndexedGeometry* createIndexedGeometry(Args... args)
 	{
-		new GLIndexedGeometry(args);
+		return nullptr;
+		//new GLIndexedGeometry(args...);
 	}
 
 
-private: 
-	// Should be a unqiue_ptr but forward-declarated type does not allow for this (without double constructors)
-	std::shared_ptr<Renderer> renderer;
+	virtual Renderer* getRenderer() override;
 
-	std::set<GpuResource*> gpuResources;
-	std::set<GpuResource*> outdatedResources;
-	//std::set<DrawableGpuResource*> drawableGpuResources;
+private: 
+	std::shared_ptr<Renderer> renderer;
 };
+

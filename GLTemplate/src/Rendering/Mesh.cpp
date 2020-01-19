@@ -6,8 +6,8 @@
 #include <assimp/postprocess.h>
 #include <Stopwatch.h>
 #include <optional>
-
-
+#include "Rendering/GpuResourceBackend.h"
+#include "Rendering/GL/GLResourceBackend.h"
 
 bool Mesh::load()
 {
@@ -104,13 +104,18 @@ bool Mesh::reload()
 
 IndexedGeometry* Mesh::addSubMesh(const IndexedGeometryData& vertexData, Material * material)
 {
-	// TODO // return this->subMeshes.emplace_back(new GLIndexedGeometry(std::move(vertexData), material)).get();
+	auto geom = dynamic_cast<GLResourceBackend*>(GpuResourceBackend::get())->createIndexedGeometry(vertexData, material);
+
+
 	return nullptr;
+
+
+	//return this->subMeshes.emplace_back(GpuResourceBackend::get()->createIndexedGeometry(vertexData, material)).get();
 }
 
 
 IndexedGeometry* Mesh::addSubMesh(IndexedGeometryData&& vertexData, Material * material)
 {
-	//return this->subMeshes.emplace_back(new IndexedGeometry(std::move(vertexData), material)).get();
+	//return this->subMeshes.emplace_back(GpuResourceBackend::get()->createIndexedGeometry(std::move(vertexData), material)).get();
 	return nullptr;
 }

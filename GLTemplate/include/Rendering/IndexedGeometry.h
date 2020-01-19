@@ -34,7 +34,7 @@ public:
 	friend class Mesh;
 
 
-	IndexedGeometry();
+	IndexedGeometry() = delete;
 
 	/**
 	 *

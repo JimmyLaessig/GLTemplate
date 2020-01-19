@@ -2,7 +2,7 @@
 // If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan graphics context creation, etc.)
 
-#include "imgui.h"
+
 
 //#include <stdio.h>
 //
@@ -25,8 +25,14 @@
 //#include "Application/Window.h"
 //#include "Rendering/Texture2D.h"
 
+#include "imgui.h"
 #include "Application/GL/GLWindow.h"
 #include<iostream>
+#include "Rendering/Camera.h"
+#include "CameraController.h"
+#include "SharedAsset.h"
+#include "Rendering/Mesh.h"
+#include "Rendering/Renderer.h"
 //#define GLM_FORCE_RADIANS
 //// [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 //// To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -80,8 +86,42 @@ int main(int, char**)
 		ImGui::End();
 	});
 
+	// Setup camera
+	
+	Camera camera;
+	camera.transform.setPosition(glm::vec3(-10, 0, 0));
+	CameraController controller;
+	controller.setCamera(&camera);
+	window.OnFrameUpdateDelegate.subscribe([&](float deltaTime) {controller.update(deltaTime); });
+	
+	
+	// Setup mesh
+	
+	auto mesh = SharedAsset::FromFile<Mesh>("Assets/sibenik-cathedral-vray.obj");
+	
+	window.OnFrameUpdateDelegate.subscribe([&](float deltaTime)
+	{
+		for (auto& submesh : mesh->subMeshes)
+		{
+
+			GpuResourceBackend::get()->getRenderer()->submitOneTimeRenderObject(
+				{
+					submesh.get(),
+					Transform(),
+					nullptr,
+					nullptr,
+					0
+				});
+		}
+	});
+	
+
 
 	window.run();
+
+	return 0;
+}
+
     // Setup window
 //    glfwSetErrorCallback(glfw_error_callback);
 //    if (!glfwInit())
@@ -378,5 +418,3 @@ int main(int, char**)
     ////glfwTerminate();
 
     
-	return 0;
-}

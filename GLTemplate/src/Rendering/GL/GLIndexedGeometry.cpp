@@ -147,7 +147,7 @@ void GLIndexedGeometry::updateGpuMemory_Internal()
 GLIndexedGeometry::~GLIndexedGeometry()
 {
 	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(VBOs.size(), VBOs.data());
+	glDeleteBuffers((GLsizei)VBOs.size(), VBOs.data());
 }
 
 GLuint GLIndexedGeometry::getVertexArrayObject() const
