@@ -112,4 +112,20 @@ if(NOT imgui_POPULATED)
   message(STATUS "Cloning imgui:  git@github.com:ocornut/imgui.git - done")
 endif()
 
+##################################################
+# Catch2
+##################################################
 
+FetchContent_Declare(
+  catch2
+  GIT_REPOSITORY git@github.com:catchorg/Catch2.git
+  GIT_TAG v2.11.1
+)
+
+FetchContent_GetProperties(catch2)
+if(NOT catch2_POPULATED)
+  message(STATUS "Cloning catch2git@github.com:catchorg/Catch2.git")
+  FetchContent_Populate(catch2)
+  message(STATUS "Cloning catch2git@github.com:catchorg/Catch2.git - done")
+  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+endif()

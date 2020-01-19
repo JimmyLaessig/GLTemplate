@@ -1,5 +1,5 @@
-#include "Renderer.h"
-#include "GpuResourceBackend.h"
+#include "Rendering/Renderer.h"
+#include "Rendering/GpuResourceBackend.h"
 #include <numeric>
 #include "GL/glew.h"
 

@@ -1,7 +1,5 @@
 #pragma once
-#include <map>
-#include <functional>
-#include "VectorMath.h"
+
 
 enum class Key : unsigned int
 {
@@ -60,7 +58,7 @@ enum class Key : unsigned int
 	TAB = 258,
 	BACKSPACE = 259,
 	INSERT = 260,
-	DELETE = 261,
+	DEL = 261,
 	RIGHT = 262,
 	LEFT = 263,
 	DOWN = 264,
@@ -141,58 +139,9 @@ enum class MouseButtom : unsigned int
 };
 
 
-enum class KeyAction : unsigned int
+enum class KeyState : unsigned int
 {
-	RELEASE = 0,
-	PRESS = 1,
+	RELEASED = 0,
+	PRESSED = 1,
 	REPEAT = 2,
-};
-
-class Input
-{
-public:
-
-	
-
-
-	Input() = delete;
-	~Input() = delete;
-	Input(const Input& other) = delete;
-	
-
-
-
-
-	typedef std::function<void(Key key, int scanCode, bool bShift, bool bAlt, bool bCtrl)> KeyCallbackDelegate;
-
-
-	static void init(struct GLFWwindow* window);
-	
-	/**
-	 * Gets the last know state of the key.
-	 * @return Returns either Input::KeyAction::PRESSED or Input::KeyAction::RELEASE
-	 */
-	static Input::KeyAction getKey(Key key);
-
-	/**
-	 * Gets the last know state of the mouse button.
-	 * @return Returns either Input::KeyAction::PRESSED or Input::KeyAction::RELEASE
-	 */
-	static Input::KeyAction getMouseButton(MouseButtom button);
-
-	/**
-	 * Returns the mouse position in screen coordinates relative to the upper-right corner.
-	 */
-	static glm::vec2 getMousePosition();
-
-
-	static void addKeyCallback(KeyAction action, KeyCallbackDelegate delegate);
-
-
-private: 
-
-	static struct GLFWwindow* window;
-
-	static std::map<KeyAction, KeyCallbackDelegate> keyCallbacks;
-
 };

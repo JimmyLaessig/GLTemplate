@@ -1,5 +1,5 @@
-#include "GLSLShader.h"
-#include "GLSLShaderLoader.h"
+#include "Rendering/GL/GLSLShader.h"
+#include "Rendering/GL/GLSLShaderLoader.h"
 
 #include <iostream>
 #include <sstream>
