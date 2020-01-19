@@ -1,7 +1,10 @@
 /*
-!include/
-!src/
+!GLTemplate/
+!GLTemplate/*
 !test/
+!test/*
+!example/
+!example/*
 !ThirdParty.cmake
 !CMakeLists.txt
 !.gitignore
