@@ -38,7 +38,7 @@ GLWindow::GLWindow(unsigned int width, unsigned int height, const std::string& t
 	{
 		throw 1;
 	}
-	//glewExperimental = true;
+	glewExperimental = true;
 
 	GpuResourceBackend::init<GLResourceBackend>();
 

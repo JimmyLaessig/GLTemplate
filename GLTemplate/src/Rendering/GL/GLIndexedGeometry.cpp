@@ -8,7 +8,9 @@
 #include <optional>
 
 
-
+GLIndexedGeometry::GLIndexedGeometry(const IndexedGeometry* geometry)
+	: IBackendIndexedGeometry(geometry)
+{}
 
 
 void GLIndexedGeometry::freeGpuMemory_Internal()
@@ -16,9 +18,6 @@ void GLIndexedGeometry::freeGpuMemory_Internal()
 	// Delete previously allocated buffers
 	glDeleteBuffers((GLsizei)VBOs.size(), VBOs.data());
 	glDeleteVertexArrays(1, &VAO);
-
-	getGLInternalPixelFormat<glm::vec3>();
-
 }
 
 
@@ -92,6 +91,8 @@ void GLIndexedGeometry::updateGpuMemory_Internal()
 		std::cout << "error" << std::endl;
 	}
 
+	auto& vertexData = geometry->getVertexData();
+
 	auto numVertices = vertexData.positions.size();
 	auto bufferIndex = 0u;
 
@@ -143,12 +144,6 @@ void GLIndexedGeometry::updateGpuMemory_Internal()
 	}
 }
 
-
-GLIndexedGeometry::~GLIndexedGeometry()
-{
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers((GLsizei)VBOs.size(), VBOs.data());
-}
 
 GLuint GLIndexedGeometry::getVertexArrayObject() const
 {

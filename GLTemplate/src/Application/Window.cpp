@@ -21,7 +21,7 @@ void IWindow::run()
 	while (!windowShouldClose())
 	{
 		// Calculate delta time
-		float now = (float)sw.elapsed<stopwatch::microseconds>() * 1e-6f;
+		float now = (float)sw.elapsed<stopwatch::Stopwatch::MICROSECONDS>() * 1e-6f;
 		float deltaTime = now - lastTime;
 		lastTime = now;
 		// Update Window

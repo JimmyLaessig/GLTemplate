@@ -104,7 +104,7 @@ bool Mesh::reload()
 
 IndexedGeometry* Mesh::addSubMesh(const IndexedGeometryData& vertexData, Material * material)
 {
-	auto geom = dynamic_cast<GLResourceBackend*>(GpuResourceBackend::get())->createIndexedGeometry(vertexData, material);
+	//auto geom = dynamic_cast<GLResourceBackend*>(GpuResourceBackend::get())->createIndexedGeometry(vertexData, material);
 
 
 	return nullptr;

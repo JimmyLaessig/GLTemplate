@@ -104,7 +104,7 @@ private:
 		//}
 
 		// Construct element in cache
-		auto asset = std::make_shared<T>();
+		auto asset				= std::make_shared<T>();
 		asset->name				= name .empty() ? path : name;
 		asset->ID				= "TODO";
 		asset->path				= path;

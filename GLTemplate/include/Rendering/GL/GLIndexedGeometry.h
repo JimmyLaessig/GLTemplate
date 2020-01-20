@@ -2,44 +2,46 @@
 
 #include "Rendering/Mesh.h"
 #include "Rendering/GL/GLTools.h"
+#include "Rendering/BackendIndexedGeometry.h"
 
 
 /**
  *
  */
-class GLIndexedGeometry : public IndexedGeometry
+class GLIndexedGeometry : public IBackendIndexedGeometry
 {
 public:
-	/**
-	 *
-	 */
-	virtual ~GLIndexedGeometry();
+
+
+	GLIndexedGeometry(const IndexedGeometry* geometry);
+
 
 	/**
 	 *
 	 */
 	GLuint getVertexArrayObject() const;
 
-	/**
-	 *
-	 */
-	std::function<void()> getDrawCall() const
-	{
-		return [vao = getVertexArrayObject(), count = (GLsizei)getVertexData().indices.size()]()
-		{
-			glBindVertexArray(vao);
-			if (glGetError() != GL_NO_ERROR)
-			{
-				std::cout << "error" << std::endl;
-			}
-			glDrawElements(
-				GL_TRIANGLES,		// mode
-				count,				// count
-				GL_UNSIGNED_INT,	// type
-				(void*)0			// element array buffer offset
-			);
-		};
-	}
+
+	///**
+	// *
+	// */
+	//std::function<void()> getDrawCall() const
+	//{
+	//	return [vao = getVertexArrayObject(), count = (GLsizei)getVertexData().indices.size()]()
+	//	{
+	//		glBindVertexArray(vao);
+	//		if (glGetError() != GL_NO_ERROR)
+	//		{
+	//			std::cout << "error" << std::endl;
+	//		}
+	//		glDrawElements(
+	//			GL_TRIANGLES,		// mode
+	//			count,				// count
+	//			GL_UNSIGNED_INT,	// type
+	//			(void*)0			// element array buffer offset
+	//		);
+	//	};
+	//}
 
 
 protected:

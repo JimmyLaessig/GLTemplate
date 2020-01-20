@@ -25,9 +25,6 @@ void GpuResourceBackend::markResourceOutdated(GpuResource* resource)
 }
 
 
-
-
-
 void GpuResourceBackend::update(float deltaTime)
 {
 	for (auto res : outdatedResources)

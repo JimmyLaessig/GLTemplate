@@ -1,18 +1,18 @@
 #pragma once
 
-
-#include "Rendering/GpuResource.h"
-#include "VectorMath.h"
 #include "Rendering/GL/GLTools.h"
+#include "Rendering/BackendTexture.h"
 
-/**
- *
- */
-template<class PixelType>
-class GLTexture2D : public GpuResource
+
+class GLTexture2D : public IBackendTexture
 {
 public: 
-	
+
+	GLTexture2D(const ITexture* texture)
+		:IBackendTexture(texture)
+	{}
+
+
 	/**
 	 *
 	 */
@@ -25,20 +25,20 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		glGenTextures(1, &handle);
 		glBindTexture(GL_TEXTURE_2D, handle);
-
-		auto internalFormat = getGLInternalPixelFormat<PixelType>();
-		auto format			= getGLPixelFormat<PixelType>();
-		auto type			= getGLDataType<PixelType>();
+		auto size			= texture->getTextureSize();
+		auto pixelInfo		= texture->getPixelInfo();
+		auto internalFormat = getGLInternalPixelFormat(pixelInfo);
+		auto format			= getGLPixelFormat(pixelInfo);
+		auto type			= getGLDataType(pixelInfo);
 		
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, size.x, size.y, 0, format, type, textureData.data());
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, size.x, size.y, 0, format, type, texture->getTextureDataPtr());
 		glGenerateMipmap(GL_TEXTURE_2D);
 		
 
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		err = glGetError() == GL_NO_ERROR;
-		
+		err = glGetError() == GL_NO_ERROR;	
 	}
 
 	/**
@@ -49,8 +49,16 @@ public:
 		glDeleteTextures(1, &handle);
 	}
 
+
 	/**
 	 *
 	 */
-	GLuint handle = 0;	
+	unsigned int handle = 0;	
+
+
+private:
+
+	GLenum internalFormat;
+	GLenum format;
+	GLenum type;
 };

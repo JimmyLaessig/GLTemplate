@@ -33,6 +33,8 @@
 #include "SharedAsset.h"
 #include "Rendering/Mesh.h"
 #include "Rendering/Renderer.h"
+#include "Rendering/Texture2D.h"
+
 //#define GLM_FORCE_RADIANS
 //// [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 //// To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.
@@ -116,6 +118,7 @@ int main(int, char**)
 	});
 	
 
+	Texture2D<glm::u8vec4> tex({ 512, 512 }, glm::u8vec4(255, 0, 255, 255));
 
 	window.run();
 

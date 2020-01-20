@@ -1,22 +1,28 @@
 #pragma once
 
-#include "GpuResource.h"
+#include "Rendering/Texture.h"
 #include "VectorMath.h"
+#include "Rendering/BackendTexture.h"
+
 
 
 template<class PixelType>
-class Texture2D : public GpuResource
+class Texture2D : public ITexture
 {
-public: 
+public:
 
-	Texture2D(glm::u32vec2 size, const std::vector<PixelType>& textureData) : GpuResource()
+	Texture2D(const glm::u32vec2& size, const std::vector<PixelType>& textureData) 
+		: ITexture()	
 	{
 		setTextureData(size, textureData);
+		this->backendTexture = GpuResourceBackend::get()->createBackendTexture2D(this);
 	}
 
-	Texture2D(glm::u32vec2 size, PixelType defaultValue) : GpuResource()
+	Texture2D(const glm::u32vec2& size, PixelType defaultValue) 
+		: ITexture()
 	{
 		setTextureData(size, defaultValue);
+		this->backendTexture = GpuResourceBackend::get()->createBackendTexture2D(this);
 	}
 
 
@@ -25,7 +31,7 @@ public:
 		assert(size.x * size.y == textureData.size());
 		this->textureData = textureData;
 		this->size = size;
-		this->markOutdated();
+		//this->markOutdated();
 	}
 
 
@@ -33,16 +39,43 @@ public:
 	{
 		this->textureData.resize(size.x * size.y, defaultValue);
 		this->size = size;
-		this->markOutdated();
+		//this->markOutdated();
 	}
 
-	virtual void resize(glm::u32vec2 size);
 
+	virtual glm::u32vec2 getTextureSize() const override
+	{
+		return size;
+	}
+
+
+	virtual size_t getTextureSizeInBytes() const override
+	{
+		return size.x * size.x * sizeof(PixelType);
+	}
+
+
+	virtual const void* getTextureDataPtr() const override
+	{
+		return (void*)textureData.data();
+	}
+
+
+	virtual PixelInfo getPixelInfo() const override
+	{
+		return PixelInfo(
+			toPixelChannels<PixelType>(),
+			toPixelDataType<PixelType>()
+		);
+	}
 
 protected:
 
-	std::vector<PixelType> textureData = {};
+	std::vector<PixelType> textureData;
+
 
 	glm::u32vec2 size = { 0,0 };
 
+
+	std::unique_ptr<IBackendTexture> backendTexture;
 };

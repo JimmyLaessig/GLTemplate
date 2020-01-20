@@ -1,11 +1,11 @@
 #pragma once
 #include <set>
 #include <memory>
-#include "../GpuResourceBackend.h"
+#include "Rendering/GpuResourceBackend.h"
 
-#include "GLTexture2D.h"
-#include "GLIndexedGeometry.h"
-
+class IBackendTexture;
+class IBackendIndexedGeometry;
+class Renderer;
 
 class GLResourceBackend : public GpuResourceBackend
 {
@@ -13,24 +13,13 @@ public:
 
 	GLResourceBackend() = default;
 
-	template<class ...Args>
-	Texture2D* createTexture2D(Args... args)
-	{
-		return nullptr;
-		//new GLTexture2D(args...);
-	}
 
-	template<class ...Args>
-	IndexedGeometry* createIndexedGeometry(Args... args)
-	{
-		return nullptr;
-		//new GLIndexedGeometry(args...);
-	}
-
+	virtual std::unique_ptr<IBackendTexture> createBackendTexture2D(ITexture* texture)  override;
+	
+	virtual std::unique_ptr<IBackendIndexedGeometry> createBackendIndexedGeometry(IndexedGeometry* geometry)  override;
 
 	virtual Renderer* getRenderer() override;
 
 private: 
 	std::shared_ptr<Renderer> renderer;
 };
-

@@ -94,15 +94,15 @@ namespace stopwatch {
 	};
 
 
-	constexpr Stopwatch::TimeFormat ns = Stopwatch::TimeFormat::NANOSECONDS;
-	constexpr Stopwatch::TimeFormat mus = Stopwatch::TimeFormat::MICROSECONDS;
-	constexpr Stopwatch::TimeFormat ms = Stopwatch::TimeFormat::MILLISECONDS;
-	constexpr Stopwatch::TimeFormat s = Stopwatch::TimeFormat::SECONDS;
+	inline Stopwatch::TimeFormat ns = Stopwatch::TimeFormat::NANOSECONDS;
+	inline Stopwatch::TimeFormat mus = Stopwatch::TimeFormat::MICROSECONDS;
+	inline Stopwatch::TimeFormat ms = Stopwatch::TimeFormat::MILLISECONDS;
+	inline Stopwatch::TimeFormat s = Stopwatch::TimeFormat::SECONDS;
 
-	constexpr Stopwatch::TimeFormat nanoseconds = Stopwatch::TimeFormat::NANOSECONDS;
-	constexpr Stopwatch::TimeFormat microseconds = Stopwatch::TimeFormat::MICROSECONDS;
-	constexpr Stopwatch::TimeFormat milliseconds = Stopwatch::TimeFormat::MILLISECONDS;
-	constexpr Stopwatch::TimeFormat seconds = Stopwatch::TimeFormat::SECONDS;
+	inline Stopwatch::TimeFormat nanoseconds = Stopwatch::TimeFormat::NANOSECONDS;
+	inline Stopwatch::TimeFormat microseconds = Stopwatch::TimeFormat::MICROSECONDS;
+	inline Stopwatch::TimeFormat milliseconds = Stopwatch::TimeFormat::MILLISECONDS;
+	inline Stopwatch::TimeFormat seconds = Stopwatch::TimeFormat::SECONDS;
 
 
 	/*std::string show_times(const std::vector<std::uint64_t>& times) {
