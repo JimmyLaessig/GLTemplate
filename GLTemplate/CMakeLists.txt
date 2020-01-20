@@ -51,14 +51,11 @@ set(LIBRARIES
 
 target_link_libraries(${PROJECT} ${LIBRARIES})
 
-add_custom_command(TARGET ${PROJECT} POST_BUILD        
-   COMMAND ${CMAKE_COMMAND} -E copy_directory		
-	${CMAKE_SOURCE_DIR}/Assets/
-	${CMAKE_CURRENT_BINARY_DIR}/Assets/)
 
-INSTALL( TARGETS ${PROJECT} ARCHIVE DESTINATION lib
-		            		LIBRARY DESTINATION lib
-                            RUNTIME DESTINATION bin )
+
+#INSTALL( TARGETS ${PROJECT} ARCHIVE DESTINATION lib#
+#		            LIBRARY DESTINATION lib
+#                            RUNTIME DESTINATION bin )
 
 #set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/install" CACHE PATH "default install prefix" FORCE)
 

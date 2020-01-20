@@ -99,13 +99,12 @@ int main(int, char**)
 	
 	// Setup mesh
 	
-	auto mesh = SharedAsset::FromFile<Mesh>("Assets/sibenik-cathedral-vray.obj");
+	auto mesh = SharedAsset::FromFile<Mesh>("Assets/Models/sibenik-cathedral-vray.obj");
 	
 	window.OnFrameUpdateDelegate.subscribe([&](float deltaTime)
 	{
 		for (auto& submesh : mesh->subMeshes)
 		{
-
 			GpuResourceBackend::get()->getRenderer()->submitOneTimeRenderObject(
 				{
 					submesh.get(),

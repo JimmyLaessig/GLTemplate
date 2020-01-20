@@ -10,8 +10,14 @@ public:
 
 	GLTexture2D(const ITexture* texture)
 		:IBackendTexture(texture)
-	{}
+	{
+		markOutdated();
+	}
 
+	virtual ~GLTexture2D()
+	{
+		freeGpuMemory();
+	}
 
 	/**
 	 *
@@ -31,6 +37,10 @@ public:
 		auto format			= getGLPixelFormat(pixelInfo);
 		auto type			= getGLDataType(pixelInfo);
 		
+		assert(format == GL_RGBA);
+		assert(internalFormat == GL_RGBA8);
+		assert(type == GL_UNSIGNED_BYTE);
+
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, size.x, size.y, 0, format, type, texture->getTextureDataPtr());
 		glGenerateMipmap(GL_TEXTURE_2D);
 		

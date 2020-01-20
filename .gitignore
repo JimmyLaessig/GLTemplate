@@ -5,6 +5,8 @@
 !test/*
 !example/
 !example/*
+!Assets/
+!Assets/*
 !ThirdParty.cmake
 !CMakeLists.txt
 !.gitignore

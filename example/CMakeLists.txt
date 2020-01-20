@@ -18,19 +18,20 @@ set (SOURCES
 	${headers}
 )
 
-
 add_executable(${PROJECT} ${SOURCES})
-
 
 set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
 
-
-#target_include_directories(${PROJECT} PUBLIC
-#    
-#)
+set_property(TARGET ${PROJECT} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$(Configuration)")
 
 set(LIBRARIES
     GLTemplate
 )
 
 target_link_libraries(${PROJECT} ${LIBRARIES})
+
+
+add_custom_command(TARGET ${PROJECT} POST_BUILD        
+   COMMAND ${CMAKE_COMMAND} -E copy_directory		
+	${CMAKE_SOURCE_DIR}/Assets/
+	$<TARGET_FILE_DIR:Example>/Assets/)

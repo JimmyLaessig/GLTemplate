@@ -22,8 +22,6 @@ GpuResource::~GpuResource()
 	{
 		backend->unregisterResource(this);
 	}
-
-	freeGpuMemory();
 }
 
 GpuResourceBackend * GpuResource::getGpuResourceBackend()

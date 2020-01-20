@@ -127,14 +127,14 @@ template<> inline GLenum getGLInternalPixelFormat<4, uint8_t>() { return GL_RGBA
 //inline GLenum getGLInternalPixelFormat(glm::vec<1, T, Q> v) { getGLInternalPixelFormat<1, T>(); }
 
 
-GLenum inline getGLDataType(PixelInfo info)
+GLenum inline getGLDataType(const PixelInfo& info)
 {
 	switch (info.DataType)
 	{
 	//case PixelDataType::DOUBLE:			return getGLDataType<double>();
 	case PixelDataType::FLOAT:			return getGLDataType<float>();
 	case PixelDataType::BYTE:			return getGLDataType<int8_t>();
-	case PixelDataType::UNSIGNED_BYTE:	return getGLDataType<int8_t>();
+	case PixelDataType::UNSIGNED_BYTE:	return getGLDataType<uint8_t>();
 	case PixelDataType::SHORT:			return getGLDataType<int16_t>();
 	case PixelDataType::UNSIGNED_SHORT: return getGLDataType<uint16_t>();
 	case PixelDataType::UNSIGNED_INT:	return getGLDataType<int32_t>();
@@ -145,7 +145,7 @@ GLenum inline getGLDataType(PixelInfo info)
 }
 
 
-GLenum inline getGLPixelFormat(PixelInfo info)
+GLenum inline getGLPixelFormat(const PixelInfo& info)
 {
 	switch (info.Channels)
 	{
@@ -165,20 +165,20 @@ GLenum inline getGLInternalPixelFormat(PixelDataType info)
 {
 	switch (info)
 	{
-		case PixelDataType::BYTE			: return getGLInternalPixelFormat<1, int8_t>();
-		case PixelDataType::UNSIGNED_BYTE	: return getGLInternalPixelFormat<1, uint8_t>();
-		case PixelDataType::SHORT			: return getGLInternalPixelFormat<1, int16_t>();
-		case PixelDataType::UNSIGNED_SHORT	: return getGLInternalPixelFormat<1, uint16_t>();
-		case PixelDataType::INT				: return getGLInternalPixelFormat<1, int32_t>();
-		case PixelDataType::UNSIGNED_INT	: return getGLInternalPixelFormat<1, uint32_t>();
-		case PixelDataType::FLOAT			: return getGLInternalPixelFormat<1, float>();
+		case PixelDataType::BYTE			: return getGLInternalPixelFormat<Channel, int8_t>();
+		case PixelDataType::UNSIGNED_BYTE	: return getGLInternalPixelFormat<Channel, uint8_t>();
+		case PixelDataType::SHORT			: return getGLInternalPixelFormat<Channel, int16_t>();
+		case PixelDataType::UNSIGNED_SHORT	: return getGLInternalPixelFormat<Channel, uint16_t>();
+		case PixelDataType::INT				: return getGLInternalPixelFormat<Channel, int32_t>();
+		case PixelDataType::UNSIGNED_INT	: return getGLInternalPixelFormat<Channel, uint32_t>();
+		case PixelDataType::FLOAT			: return getGLInternalPixelFormat<Channel, float>();
 		//case PixelDataType::DOUBLE			: return getGLInternalPixelFormat<1, double>();
-		default								: return getGLInternalPixelFormat<1, uint8_t>();
+		default								: return getGLInternalPixelFormat<Channel, uint8_t>();
 	}
 }
 
 
-GLenum inline getGLInternalPixelFormat(PixelInfo info)
+GLenum inline getGLInternalPixelFormat(const PixelInfo& info)
 {
 	switch (info.Channels)
 	{
