@@ -5,6 +5,6 @@
 class Material
 {
 public: 
-	Shader* shader;
-	UniformCollection* uniformBuffer;
+	IShader* shader;
+	//UniformCollection* uniformBuffer;
 };

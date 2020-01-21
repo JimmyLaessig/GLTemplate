@@ -5,9 +5,15 @@
 #include "Rendering/Shader.h"
 #include "Rendering/IndexedGeometry.h"
 
+struct UniformCollection
+{
+
+};
+
+
 struct RenderObject
 {
-	RenderObject(IndexedGeometry* drawable, Transform transform, Shader* shader, UniformCollection* uniforms, int renderPass);
+	RenderObject(IndexedGeometry* drawable, Transform transform, IShader* shader, UniformCollection* uniforms, int renderPass);
 
 	RenderObject() = delete;
 
@@ -28,12 +34,12 @@ struct RenderObject
 	/**
 	 * The shader of the object
 	 */
-	Shader* shader;
+	IShader* shader;
 
 	/**
 	 * The object-specific uniforms for the shader. (Does not include view-specific uniforms)
 	 */
-	UniformCollection* uniforms;
+	//UniformCollection* uniforms;
 
 	/**
 	 * The lower the number the earlier this primitive is rendered.

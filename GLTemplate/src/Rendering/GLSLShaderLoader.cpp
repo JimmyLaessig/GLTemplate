@@ -1,4 +1,4 @@
-#include "Rendering/GL/GLSLShaderLoader.h"
+#include "Rendering/GL/GLShaderLoader.h"
 #include <fstream>
 #include <sstream>
 #include <regex>
@@ -58,7 +58,7 @@ std::optional<std::string> getShaderStageCode(const std::string& code, const std
 }
 
 
-ShaderStageData GLSLShaderLoader::LoadFile(const char* path)
+GLSLShaderStageData GLShaderLoader::LoadFile(const char* path)
 {
 	
 	std::ifstream file(path);
@@ -69,7 +69,7 @@ ShaderStageData GLSLShaderLoader::LoadFile(const char* path)
 	std::string code = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
 	file.close();
 
-	return ShaderStageData
+	return GLSLShaderStageData
 	{
 		getShaderStageCode(code, "VERTEX").value_or(""),
 		getShaderStageCode(code, "FRAGMENT").value_or(""),
