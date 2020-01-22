@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Application/Window.h"
-#include "Rendering/GL/GLTools.h"
+#include "Rendering/GL/GL.h"
 
 /**
  *

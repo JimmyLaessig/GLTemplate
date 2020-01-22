@@ -6,6 +6,7 @@
 #include <assimp/postprocess.h>
 #include <Stopwatch.h>
 #include <optional>
+#include "Rendering/GL/GLTypeConversion.h"
 
 
 GLIndexedGeometry::GLIndexedGeometry(const IndexedGeometry* geometry)
@@ -24,7 +25,7 @@ void GLIndexedGeometry::freeGpuMemory_Internal()
 template<class VectorType>
 GLuint createVertexBufferObject(const std::vector<VectorType>& vertexData, const std::optional<std::tuple<GLuint, GLuint>> vao_and_attributeIndex = {})
 {
-	auto type			= getGLDataType<decltype(VectorType().x)>();
+	auto type			= GLTypeConversion::toGLDataType<decltype(VectorType().x)>();
 	auto numVertices	= vertexData.size();
 	auto numBytes		= sizeof(VectorType);
 	auto numChannels	= VectorType::length();

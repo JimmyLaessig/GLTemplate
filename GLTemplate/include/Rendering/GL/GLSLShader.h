@@ -1,6 +1,6 @@
 #pragma once
 #include "Rendering/Shader.h"
-#include "Rendering/GL/GLTools.h"
+#include "Rendering/GL/GL.h"
 #include <optional>
 
 

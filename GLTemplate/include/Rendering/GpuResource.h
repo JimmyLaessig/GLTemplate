@@ -62,6 +62,15 @@ public:
 	}
 
 	/**
+	 *
+	 */
+	virtual bool isOutdated() const
+	{
+		return bIsOutdated;
+	}
+
+
+	/**
 	 * Returns the resource lock for this resource.
 	 */
 	virtual std::mutex& getResourceLock()

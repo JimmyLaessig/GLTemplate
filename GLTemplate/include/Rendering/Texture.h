@@ -79,4 +79,7 @@ public:
 
 	virtual PixelInfo getPixelInfo() const = 0;
 
+
+	virtual const IBackendTexture* getBackendTexture() const = 0;
+
 };

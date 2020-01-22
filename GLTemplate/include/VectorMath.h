@@ -1,6 +1,5 @@
 #pragma once
 #define GLM_FORCE_RADIANS
-
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -10,6 +9,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/detail/type_half.hpp>
 
 namespace glm
 {

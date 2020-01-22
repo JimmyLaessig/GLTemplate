@@ -11,7 +11,7 @@ class GLResourceBackend : public GpuResourceBackend
 {
 public: 
 
-	GLResourceBackend() = default;
+	GLResourceBackend();
 
 
 	virtual std::unique_ptr<IBackendTexture> createBackendTexture2D(ITexture* texture)  override;
