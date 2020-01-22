@@ -34,6 +34,7 @@ set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
 
 target_include_directories(${PROJECT} PUBLIC
     include
+	${loguru_SOURCE_DIR}/include
 	${glfw_SOURCE_DIR}/include/GLFW
 	${glew_SOURCE_DIR}/include
 	${assimp_SOURCE_DIR}/include

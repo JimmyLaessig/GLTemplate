@@ -2,130 +2,116 @@ include(FetchContent)
 
 set(FETCHCONTENT_BASE_DIR ${THIRDPARTY_BASE_DIR})
 
+set(CPM_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CPM.cmake")
+set(CPM_VERSION 0.15.1)
+
+if(NOT EXISTS ${CPM_DOWNLOAD_LOCATION})
+  message(STATUS "Downloading CPM.cmake")
+  file(DOWNLOAD https://raw.githubusercontent.com/TheLartians/CPM.cmake/v${CPM_VERSION}/cmake/CPM.cmake ${CPM_DOWNLOAD_LOCATION})
+endif(NOT EXISTS ${CPM_DOWNLOAD_LOCATION})
+
+include(${CPM_DOWNLOAD_LOCATION})
+
+
 ##################################################
 # GLFW
 ##################################################
 
-FetchContent_Declare(
-  glfw
+CPMAddPackage(
+  NAME glfw
   GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG 3.3
+  GIT_TAG 3.3.2
+  DOWNLOAD_ONLY True
+  OPTIONS
+  "GLFW_INSTALL OFF"
+  "GLFW_BUILD_DOCS OFF"
+  "GLFW_BUILD_TESTS OFF"
+  "GLFW_BUILD_EXAMPLES OFF"
 )
-
-FetchContent_GetProperties(glfw)
-if(NOT glfw_POPULATED)
-  message(STATUS "Cloning glfw: https://github.com/glfw/glfw.git")
-  FetchContent_Populate(glfw)
-  message(STATUS "Cloning glfw: https://github.com/glfw/glfw.git - done")
-endif()
-
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE )
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE )
 
 
 ##################################################
 # GLEW
 ##################################################
 
-FetchContent_Declare(
-  glew
+CPMAddPackage(
+  NAME glew
   GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
   GIT_TAG glew-cmake-2.1.0
+  DOWNLOAD_ONLY True
+  OPTIONS
+  "glew-cmake_BUILD_SHARED OFF"
 )
-
-FetchContent_GetProperties(glew)
-if(NOT glew_POPULATED)
-  message(STATUS "Cloning glew: https://github.com/Perlmint/glew-cmake.git")
-  FetchContent_Populate(glew)
- message(STATUS "Cloning glew: https://github.com/Perlmint/glew-cmake.git - done")
-endif()
-
 
 ##################################################
 # GLM
 ##################################################
 
-FetchContent_Declare(
-  glm
+CPMAddPackage(
+  NAME glm
   GIT_REPOSITORY https://github.com/g-truc/glm.git
   GIT_TAG 0.9.9.5
+  DOWNLOAD_ONLY True
 )
-
-FetchContent_GetProperties(glm)
-if(NOT glm_POPULATED)
-  message(STATUS "Cloning glm:  https://github.com/g-truc/glm.git")
-  FetchContent_Populate(glm)
-  message(STATUS "Cloning glm:  https://github.com/g-truc/glm.git - done")
-endif()
 
 ##################################################
 # stduuid
 ##################################################
 
-FetchContent_Declare(
-  stduuid
+CPMAddPackage(
+  NAME stduuid
   GIT_REPOSITORY https://github.com/mariusbancila/stduuid.git
   GIT_TAG v1.0
+  DOWNLOAD_ONLY True
 )
-
-FetchContent_GetProperties(stduuid)
-if(NOT stduuid_POPULATED)
-  message(STATUS "Cloning stduuid:  https://github.com/mariusbancila/stduuid.git")
-  FetchContent_Populate(stduuid)
-  message(STATUS "Cloning stduuid:  https://github.com/mariusbancila/stduuid.git - done")
-endif()
 	
 
 ##################################################
 # Assimp
 ##################################################
 
-FetchContent_Declare(
-  assimp
+CPMAddPackage(
+  NAME assimp
   GIT_REPOSITORY git@github.com:assimp/assimp.git
   GIT_TAG v5.0.0
+  DOWNLOAD_ONLY True
+  OPTIONS
+  "ASSIMP_BUILD_TESTS OFF"
+  "ASSIMP_BUILD_ASSIMP_TOOLS OFF"
 )
-
-FetchContent_GetProperties(assimp)
-if(NOT assimp_POPULATED)
-  message(STATUS "Cloning assimp:  git@github.com:assimp/assimp.git")
-  FetchContent_Populate(assimp)
-  message(STATUS "Cloning assimp:  git@github.com:assimp/assimp.git - done")
-endif()
-
 
 ##################################################
 # Imgui
 ##################################################
 
-FetchContent_Declare(
-  imgui
+CPMAddPackage(
+  NAME imgui
   GIT_REPOSITORY git@github.com:ocornut/imgui.git
   GIT_TAG v1.74
+  LOAD_ONLY True
 )
-
-FetchContent_GetProperties(imgui)
-if(NOT imgui_POPULATED)
-  message(STATUS "Cloning imgui:  git@github.com:ocornut/imgui.git")
-  FetchContent_Populate(imgui)
-  message(STATUS "Cloning imgui:  git@github.com:ocornut/imgui.git - done")
-endif()
 
 ##################################################
 # Catch2
 ##################################################
 
-FetchContent_Declare(
-  catch2
+CPMAddPackage(
+  NAME catch2
   GIT_REPOSITORY git@github.com:catchorg/Catch2.git
   GIT_TAG v2.11.1
+  DOWNLOAD_ONLY True
 )
-
-FetchContent_GetProperties(catch2)
-if(NOT catch2_POPULATED)
-  message(STATUS "Cloning catch2git@github.com:catchorg/Catch2.git")
-  FetchContent_Populate(catch2)
-  message(STATUS "Cloning catch2git@github.com:catchorg/Catch2.git - done")
-  list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/contrib)
+if(catch2_ADDED)
+	list(APPEND CMAKE_MODULE_PATH "${catch2_SOURCE_DIR}/contrib")
 endif()
+
+##################################################
+# Loguru
+##################################################
+
+CPMAddPackage(
+  NAME loguru
+  GIT_REPOSITORY git@github.com:emilk/loguru.git
+  GIT_TAG v2.1.0
+  DOWNLOAD_ONLY True
+)

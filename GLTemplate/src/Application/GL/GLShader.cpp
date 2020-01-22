@@ -3,13 +3,27 @@
 
 #include <iostream>
 #include <sstream>
+#include <Application/Log.h>
 
+GLSLShaderStageData::GLSLShaderStageData(
+	std::string_view vertexShaderCode,
+	std::string_view fragmentShaderCode,
+	std::string_view geometryShaderCode,
+	std::string_view tessellationEvalShaderCode,
+	std::string_view tessellationControlShaderCode,
+	std::string_view computeShaderCode)
+	: vertexShaderCode(vertexShaderCode),
+	fragmentShaderCode(fragmentShaderCode),
+	geometryShaderCode(geometryShaderCode),
+	tessellationEvalShaderCode(tessellationEvalShaderCode),
+	tessellationControlShaderCode(tessellationControlShaderCode),
+	computeShaderCode(computeShaderCode)
+{}
 
 
 GLShader::~GLShader()
 {
 	freeGpuMemory();
-	
 }
 
 
@@ -32,55 +46,19 @@ void GLShader::freeGpuMemory_Internal()
 }
 
 
-std::optional<GLuint> GLShader::compileShader(const char* shaderCode, GLenum shaderType)
-{
-	if (strlen(shaderCode) <= 0)
-	{
-		return {};
-	}
-	auto handle = glCreateShader(shaderType);
 
-	glShaderSource(handle, 1, &shaderCode, NULL);
-	glCompileShader(handle);
-
-	std::stringstream ss(shaderCode);
-	int lineNumber = 1;
-	std::cout << "Compiling Shader: " << std::endl;
-	for (std::string line; std::getline(ss, line); lineNumber++)
-	{
-		std::cout << lineNumber++ << +":\t" << line << std::endl;
-	}
-
-	GLint succeded;
-	glGetShaderiv(handle, GL_COMPILE_STATUS, &succeded);
-	if (succeded == GL_FALSE || !glIsShader(handle))
-	{
-		GLint logSize;
-		glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &logSize);
-
-		std::string log(logSize, ' ');
-		glGetShaderInfoLog(handle, logSize, NULL, log.data());
-		std::cerr << "Failed to compile Shader: " << log.c_str() << std::endl;
-
-
-		glDeleteShader(handle);
-		return {};
-	}
-
-	return handle;
-}
 
 
 void GLShader::updateGpuMemory_Internal()
 {
 	programHandle = glCreateProgram();
 
-	vertexStage = compileShader(shaderStageData.vertexShaderCode.c_str(), GL_VERTEX_SHADER).value_or(0);
-	fragmentStage = compileShader(shaderStageData.fragmentShaderCode.c_str(), GL_FRAGMENT_SHADER).value_or(0);
-	geometryStage = compileShader(shaderStageData.geometryShaderCode.c_str(), GL_GEOMETRY_SHADER).value_or(0);
-	tessellationControlStage = compileShader(shaderStageData.tessellationControlShaderCode.c_str(), GL_TESS_CONTROL_SHADER).value_or(0);
-	tessellationEvalStage = compileShader(shaderStageData.tessellationEvalShaderCode.c_str(), GL_TESS_EVALUATION_SHADER).value_or(0);
-	computeStage = compileShader(shaderStageData.computeShaderCode.c_str(), GL_COMPUTE_SHADER).value_or(0);
+	vertexStage					= compileGLShaderProgram(shaderStageData.vertexShaderCode.c_str(), GL_VERTEX_SHADER).value_or(0);
+	fragmentStage				= compileGLShaderProgram(shaderStageData.fragmentShaderCode.c_str(), GL_FRAGMENT_SHADER).value_or(0);
+	geometryStage				= compileGLShaderProgram(shaderStageData.geometryShaderCode.c_str(), GL_GEOMETRY_SHADER).value_or(0);
+	tessellationControlStage	= compileGLShaderProgram(shaderStageData.tessellationControlShaderCode.c_str(), GL_TESS_CONTROL_SHADER).value_or(0);
+	tessellationEvalStage		= compileGLShaderProgram(shaderStageData.tessellationEvalShaderCode.c_str(), GL_TESS_EVALUATION_SHADER).value_or(0);
+	computeStage				= compileGLShaderProgram(shaderStageData.computeShaderCode.c_str(), GL_COMPUTE_SHADER).value_or(0);
 
 	if (vertexStage)				glAttachShader(programHandle, vertexStage);
 	if (fragmentStage)				glAttachShader(programHandle, fragmentStage);
@@ -107,36 +85,23 @@ void GLShader::updateGpuMemory_Internal()
 }
 
 
-bool GLShader::load()
-{
-	if (isRuntimeCreated())
-		return false;
+//bool GLShader::load()
+//{
+//	if (isRuntimeCreated())
+//		return false;
+//
+//	setShaderStageData(GLShaderLoader::LoadFile(getAssetPath().c_str()));
+//	return true;
+//}
+//
+//
+//bool GLShader::reload()
+//{
+//	return false;
+//}
 
-	setShaderStageData(GLShaderLoader::LoadFile(getAssetPath().c_str()));
-	return true;
-}
 
 
-bool GLShader::reload()
-{
-	return false;
-}
-
-
-GLSLShaderStageData::GLSLShaderStageData(
-	const std::string & vertexShaderCode,
-	const std::string & fragmentShaderCode,
-	const std::string & geometryShaderCode,
-	const std::string & tessellationEvalShaderCode,
-	const std::string & tessellationControlShaderCode,
-	const std::string & computeShaderCode)
-	: vertexShaderCode(vertexShaderCode),
-	fragmentShaderCode(fragmentShaderCode),
-	geometryShaderCode(geometryShaderCode),
-	tessellationEvalShaderCode(tessellationEvalShaderCode),
-	tessellationControlShaderCode(tessellationControlShaderCode),
-	computeShaderCode(computeShaderCode)
-{}
 
 
 
@@ -221,3 +186,39 @@ GLSLShaderStageData::GLSLShaderStageData(
 //
 //
 
+std::optional<GLuint> compileGLShaderProgram(std::string_view shaderCode, GLenum shaderType)
+{
+	if (shaderCode.size() <= 0)
+	{
+		return {};
+	}
+	auto handle = glCreateShader(shaderType);
+	auto codePtr = shaderCode.data();
+	glShaderSource(handle, 1, &codePtr, NULL);
+	glCompileShader(handle);
+
+	std::stringstream ss(shaderCode.data());
+	int lineNumber = 1;
+	std::cout << "Compiling Shader: " << std::endl;
+	for (std::string line; std::getline(ss, line); lineNumber++)
+	{
+		std::cout << lineNumber++ << +":\t" << line << std::endl;
+	}
+
+	GLint succeded;
+	glGetShaderiv(handle, GL_COMPILE_STATUS, &succeded);
+	if (succeded == GL_FALSE || !glIsShader(handle))
+	{
+		GLint logSize;
+		glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &logSize);
+
+		std::string log(logSize, ' ');
+		glGetShaderInfoLog(handle, logSize, NULL, log.data());
+		std::cerr << "Failed to compile Shader: " << log.c_str() << std::endl;
+
+		glDeleteShader(handle);
+		return {};
+	}
+
+	return handle;
+}

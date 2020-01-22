@@ -4,6 +4,9 @@ set(PROJECT GLTemplateTests)
 project(${PROJECT})
 
 
+set(CATCH_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+set(CATCH_INSTALL_HELPERS OFF CACHE BOOL "" FORCE)
 add_subdirectory(${catch2_SOURCE_DIR} ${catch2_BINARY_DIR})
 
 # Whenever this glob's value changes, cmake will rerun and update the build with the

@@ -1,12 +1,24 @@
 #pragma once
 #include "Rendering/Shader.h"
-#include "Rendering/GL/GLTools.h"
+#include "Rendering/GL/GL.h"
 #include <optional>
 #include "Rendering/GL/GLTexture2D.h"
 
+/**
+ * Templated function that returns the proper glUniform function for the UniformType. 
+ * For sake of sanity, glUniform1/2/3/4* returns the vectorized version of the function.
+ * E.g.: getUniformFunction<float>() returns glUniform1fv. So the function arguments are consitent for all vector types and matrix types.
+ * Let T be the data type of the elements of the matrices/vector (e.g. float for vec3):
+ * 
+ * The function signature for all scalar and vector types: 
+ *		void(GLuint location, GLuint count, T* data) 
+ * The function signature for all matrix types: 
+ *		void(GLuint location, GLuint count, GLbool transpose, T* data) 
+ */
 template<class UniformType>
 constexpr auto getUniformFunction() { UniformType::no_implementation; }
 
+// Float
 template<> constexpr auto getUniformFunction<float>()		{ return glUniform1fv; }
 template<> constexpr auto getUniformFunction<glm::vec2>()	{ return glUniform2fv; }
 template<> constexpr auto getUniformFunction<glm::vec3>()	{ return glUniform3fv; }
@@ -20,7 +32,7 @@ template<> constexpr auto getUniformFunction<glm::mat3x2>() { return glUniformMa
 template<> constexpr auto getUniformFunction<glm::mat3x4>() { return glUniformMatrix3x4fv; }
 template<> constexpr auto getUniformFunction<glm::mat4x2>() { return glUniformMatrix4x2fv; }
 template<> constexpr auto getUniformFunction<glm::mat4x3>() { return glUniformMatrix4x3fv; }
-
+// Double
 template<> constexpr auto getUniformFunction<double>()		{ return glUniform1dv; }
 template<> constexpr auto getUniformFunction<glm::dvec2>()	{ return glUniform2dv; }
 template<> constexpr auto getUniformFunction<glm::dvec3>()	{ return glUniform3dv; }
@@ -34,67 +46,30 @@ template<> constexpr auto getUniformFunction<glm::dmat3x2>(){ return glUniformMa
 template<> constexpr auto getUniformFunction<glm::dmat3x4>(){ return glUniformMatrix3x4dv; }
 template<> constexpr auto getUniformFunction<glm::dmat4x2>(){ return glUniformMatrix4x2dv; }
 template<> constexpr auto getUniformFunction<glm::dmat4x3>(){ return glUniformMatrix4x3dv; }
-
-
+// Int
 template<> constexpr auto getUniformFunction<int>()			{ return glUniform1iv; }
 template<> constexpr auto getUniformFunction<glm::ivec2>()	{ return glUniform2iv; }
 template<> constexpr auto getUniformFunction<glm::ivec3>()	{ return glUniform3iv; }
 template<> constexpr auto getUniformFunction<glm::ivec4>()	{ return glUniform4iv; }
-template<> constexpr auto getUniformFunction<unsigned int>(){ return glUniform1uiv; }
+// Unsigned Int
+template<> constexpr auto getUniformFunction<uint32_t>()	{ return glUniform1uiv; }
 template<> constexpr auto getUniformFunction<glm::uvec2>()	{ return glUniform2uiv; }
 template<> constexpr auto getUniformFunction<glm::uvec3>()	{ return glUniform3uiv; }
 template<> constexpr auto getUniformFunction<glm::uvec4>()	{ return glUniform4uiv; }
-
-
-//template<> constexpr auto getUniformFunction<const std::vector<float>&>() { return glUniform1fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::vec2>&>() { return glUniform2fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::vec3>&>() { return glUniform3fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::vec4>&>() { return glUniform4fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat2>&>() { return glUniformMatrix2fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat3>&>() { return glUniformMatrix3fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat4>&>() { return glUniformMatrix4fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat2x3>&>() { return glUniformMatrix2x3fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat2x4>&>() { return glUniformMatrix2x4fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat3x2>&>() { return glUniformMatrix3x2fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat3x4>&>() { return glUniformMatrix3x4fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat4x2>&>() { return glUniformMatrix4x2fv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::mat4x3>&>() { return glUniformMatrix4x3fv; }
-//
-//template<> constexpr auto getUniformFunction<const std::vector<int>&>() { return glUniform1iv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::ivec2>&>() { return glUniform2iv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::ivec3>&>() { return glUniform3iv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::ivec4>&>() { return glUniform4iv; }
-//template<> constexpr auto getUniformFunction<const std::vector<unsigned int>&>() { return glUniform1uiv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::uvec2>&>() { return glUniform2uiv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::uvec3>&>() { return glUniform3uiv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::uvec4>&>() { return glUniform4uiv; }
-//
-//template<> constexpr auto getUniformFunction<const std::vector<double>&>() { return glUniform1dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dvec2>& >() { return glUniform2dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dvec3>& >() { return glUniform3dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dvec4>& >() { return glUniform4dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat2>& >() { return glUniformMatrix2dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat3>& >() { return glUniformMatrix3dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat4>& >() { return glUniformMatrix4dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat2x3>&>() { return glUniformMatrix2x3dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat2x4>&>() { return glUniformMatrix2x4dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat3x2>&>() { return glUniformMatrix3x2dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat3x4>&>() { return glUniformMatrix3x4dv; }
-//template<> constexpr auto getUniformFunction<const std::vector<glm::dmat4x3>&>() { return glUniformMatrix4x2dv; }
 
 
 
 struct GLSLShaderStageData
 {
 	GLSLShaderStageData() = default;
-
+	
 	GLSLShaderStageData(
-		const std::string& vertexShaderCode,
-		const std::string& fragmentShaderCode,
-		const std::string& geometryShaderCode,
-		const std::string& tessellationEvalShaderCode,
-		const std::string& tessellationControlShaderCode,
-		const std::string& computeShaderCode);
+		std::string_view vertexShaderCode,
+		std::string_view fragmentShaderCode,
+		std::string_view geometryShaderCode,
+		std::string_view tessellationEvalShaderCode,
+		std::string_view tessellationControlShaderCode,
+		std::string_view computeShaderCode);
 
 	GLSLShaderStageData(const GLSLShaderStageData& other) = default;
 
@@ -149,8 +124,7 @@ public:
 		bindUniform(1, 1.0f);
 		bindUniform(1, 1.0);
 		bindUniform(1, glm::mat4(1));
-		bindUniform(1, std::vector<glm::mat4>{glm::mat4(1), glm::mat4(1)});
-		
+		bindUniform(1, std::vector<glm::mat4>{glm::mat4(1), glm::mat4(1)});	
 	}
 
 protected: 
@@ -170,7 +144,7 @@ protected:
 	}
 
 	/**
-	 * Binds an array of vec<C> to the shader location.
+	 * Binds an array of glm::vec<C> to the shader location.
 	 */
 	template<int C, class T, glm::qualifier Q>
 	void bindUniform(int location, const std::initializer_list<glm::vec<C, T, Q>>& value)
@@ -179,7 +153,7 @@ protected:
 	}
 
 	/**
-	 * Binds an array of vec<C> to the shader location.
+	 * Binds an array of glm::vec<C> to the shader location.
 	 */
 	template<int C, class T, glm::qualifier Q>
 	void bindUniform(int location, const std::vector<glm::vec<C, T, Q>>& value)
@@ -188,7 +162,7 @@ protected:
 	}
 
 	/**
-	 * Binds a single of mat<CxR> to the shader location.
+	 * Binds a single of glm::mat<CxR> to the shader location.
 	 */
 	template<int C, int R,  class T, glm::qualifier Q>
 	void bindUniform(int location, const glm::mat<C, R, T, Q>& value)
@@ -197,7 +171,7 @@ protected:
 	}
 
 	/**
-	 * Binds an arry of mat<CxR> to the shader location.
+	 * Binds an arry of glm::mat<CxR> to the shader location.
 	 */
 	template<int C, int R, class T, glm::qualifier Q>
 	void bindUniform(int location, const std::initializer_list<glm::mat<C, R, T, Q>>& value)
@@ -206,7 +180,7 @@ protected:
 	}
 
 	/**
-	 * Binds an arry of mat<CxR> to the shader location.
+	 * Binds an arry of glm::mat<CxR> to the shader location.
 	 */
 	template<int C, int R, class T, glm::qualifier Q>
 	void bindUniform(int location, const std::vector<glm::mat<C, R, T, Q>>& value)
@@ -244,16 +218,13 @@ protected:
 	/**
 	 * Binds a Texture2D to the shader location.
 	 */
-	template<class T>
 	void bindUniform(int location, const GLTexture2D* texture, int textureUnit)
 	{
-		glActiveTexture(GLTexture0 + textureUnit);
-		glBindTexture(GL_TEXTURE2D, texture ? texture->handle: 0);
+		glActiveTexture(GL_TEXTURE0 + textureUnit);
+		glBindTexture(GL_TEXTURE_2D, texture ? texture->handle: 0);
 		bindUniform(location, GL_TEXTURE0 + textureUnit);
 	}
-
-private: 
-
-	static std::optional<GLuint> compileShader(const char* shaderCode, GLenum shaderType);
 };
 
+
+std::optional<GLuint> compileGLShaderProgram(std::string_view shaderCode, GLenum shaderType);

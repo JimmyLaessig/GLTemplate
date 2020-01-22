@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Rendering/Mesh.h"
-#include "Rendering/GL/GLTools.h"
+#include "Rendering/GL/GL.h"
 #include "Rendering/BackendIndexedGeometry.h"
 
 

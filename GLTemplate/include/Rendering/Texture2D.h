@@ -14,15 +14,15 @@ public:
 	Texture2D(const glm::u32vec2& size, const std::vector<PixelType>& textureData) 
 		: ITexture()	
 	{
-		setTextureData(size, textureData);
 		this->backendTexture = GpuResourceBackend::get()->createBackendTexture2D(this);
+		setTextureData(size, textureData);	
 	}
 
 	Texture2D(const glm::u32vec2& size, PixelType defaultValue) 
 		: ITexture()
 	{
-		setTextureData(size, defaultValue);
 		this->backendTexture = GpuResourceBackend::get()->createBackendTexture2D(this);
+		setTextureData(size, defaultValue);
 	}
 
 
@@ -31,7 +31,7 @@ public:
 		assert(size.x * size.y == textureData.size());
 		this->textureData = textureData;
 		this->size = size;
-		//this->markOutdated();
+		this->backendTexture->markOutdated();
 	}
 
 
@@ -39,7 +39,7 @@ public:
 	{
 		this->textureData.resize(size.x * size.y, defaultValue);
 		this->size = size;
-		//this->markOutdated();
+		this->backendTexture->markOutdated();
 	}
 
 
@@ -68,6 +68,21 @@ public:
 			toPixelDataType<PixelType>()
 		);
 	}
+
+
+	virtual const IBackendTexture* getBackendTexture() const override
+	{
+		if(backendTexture)
+			return backendTexture.get();
+
+		return nullptr;
+	}
+
+	const std::vector<PixelType>& getData() const
+	{
+		return textureData;
+	}
+
 
 protected:
 

@@ -35,11 +35,7 @@ GLWindow::GLWindow(unsigned int width, unsigned int height, const std::string& t
 	//glfwSwapInterval(1); // Enable vsync
 	//Input::init(window);
 
-	if (glewInit() != GLEW_OK)
-	{
-		throw 1;
-	}
-	glewExperimental = true;
+	
 
 	GpuResourceBackend::init<GLResourceBackend>();
 

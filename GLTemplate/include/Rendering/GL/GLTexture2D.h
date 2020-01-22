@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rendering/GL/GLTools.h"
+#include "Rendering/GL/GLTypeConversion.h"
 #include "Rendering/BackendTexture.h"
 
 
@@ -31,15 +31,13 @@ public:
 		glActiveTexture(GL_TEXTURE0);
 		glGenTextures(1, &handle);
 		glBindTexture(GL_TEXTURE_2D, handle);
+
 		auto size			= texture->getTextureSize();
 		auto pixelInfo		= texture->getPixelInfo();
-		auto internalFormat = getGLInternalPixelFormat(pixelInfo);
-		auto format			= getGLPixelFormat(pixelInfo);
-		auto type			= getGLDataType(pixelInfo);
+		auto internalFormat = GLTypeConversion::toGLInternalPixelFormat(pixelInfo);
+		auto format			= GLTypeConversion::toGLPixelFormat(pixelInfo);
+		auto type			= GLTypeConversion::toGLDataType(pixelInfo);
 		
-		assert(format == GL_RGBA);
-		assert(internalFormat == GL_RGBA8);
-		assert(type == GL_UNSIGNED_BYTE);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, size.x, size.y, 0, format, type, texture->getTextureDataPtr());
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -48,8 +46,10 @@ public:
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+
 		err = glGetError() == GL_NO_ERROR;	
 	}
+
 
 	/**
 	 *
