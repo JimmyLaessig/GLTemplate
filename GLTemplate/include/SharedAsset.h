@@ -1,9 +1,14 @@
 #pragma once
-#include <map>
+
+
 #include <string>
 #include <iostream>
-#include <iostream>
-//#include <uuid.h>
+#include <map>
+#include <set>
+
+#include "Application/Log.h"
+
+
 
 class SharedAsset
 {
@@ -14,7 +19,7 @@ public:
 	 * If the object failed to create or an object with the same ID with a different type exists in the cache, nullptr is returned.
 	 */
 	template<class T>
-	static std::shared_ptr<T> New(const std::string& name = "")
+	static std::shared_ptr<T> New(const std::string_view name = "")
 	{
 		return ConsctructSharedAsset<T>(name);
 	}
@@ -25,7 +30,7 @@ public:
 	 * If the object is created for the first time, the load function will be executed. If load failes, the object is discarded and nullptr is returned.
 	 */
 	template<class T>
-	static std::shared_ptr<T> FromFile(const std::string& path, const std::string& name = "")
+	static std::shared_ptr<T> FromFile(const std::string_view path, const std::string_view name = "")
 	{
 		return ConsctructSharedAsset<T>(name == "" ? path : name, path);
 	}
@@ -51,7 +56,7 @@ public:
 	/**
 	 * Returns the ID of the asset.
 	 */
-	const std::string& getID() const
+	const size_t& getID() const
 	{
 		return ID;
 	}
@@ -76,37 +81,41 @@ public:
 
 private:
 
+
+
+
+
 	/**
 	 * Constructs the SharedAsset object of derived type T with the given id and path.
 	 * If the path argument is an empty string, a runtime object will be created. 
 	 */
 	template<class T>
-	static std::shared_ptr<T> ConsctructSharedAsset(const std::string& name, const std::string& path = "")
+	static std::shared_ptr<T> ConsctructSharedAsset(const std::string_view name, const std::string_view path = "")
 	{
-		// const auto id = uuids::uuid_system_generator{}();
-		
+		auto ID = gen(name);
 		// Return cached element
-		//if (AssetCache.count(ID))
-		//{
-		//	// Assure that the type of the object is actually the same as the templated type T.
-		//	if (auto asset = std::dynamic_pointer_cast<T>(AssetCache[ID]))
-		//	{
-		//		return asset;
-		//	}
-		//	// Else, log the error and return nullptr.
-		//	else
-		//	{
-		//		std::cerr << "Type Conflict: An object with ID=" << ID << " already exists in the cache. Target type: " 
-		//			<< typeid(T).name() << ", found type: " << typeid(*AssetCache[ID].get()).name() << "." << std::endl;
+		if (AssetCache.count(ID))
+		{
+			// Assure that the type of the object is actually the same as the templated type T.
+			if (auto asset = std::dynamic_pointer_cast<T>(AssetCache[ID]))
+			{
+				return asset;
+			}
+			// Else, log the error and return nullptr.
+			else
+			{
+				
+				std::cerr << "Type Conflict: An object with ID=" << ID << " already exists in the cache. Target type: " 
+					<< typeid(T).name() << ", found type: " << typeid(*AssetCache[ID].get()).name() << "." << std::endl;
 
-		//		return nullptr;
-		//	}
-		//}
+				return nullptr;
+			}
+		}
 
 		// Construct element in cache
 		auto asset				= std::make_shared<T>();
 		asset->name				= name .empty() ? path : name;
-		asset->ID				= "TODO";
+		asset->ID				= ID;
 		asset->path				= path;
 		asset->bRuntimeCreated	= path.empty();
 		
@@ -121,14 +130,29 @@ private:
 		}
 
 		// Push the element to the cache if loading was successfull. 
-		AssetCache[asset->ID] = asset;
+		AssetCache[ asset->ID] = asset;
 
 		return asset;
 	}
 
+
 private:	
 
-	std::string ID;
+	struct UUIDGenerator
+	{
+	public:
+
+		size_t operator()(const std::string_view s);
+
+
+		size_t operator()();
+
+	private:
+
+		std::set<size_t> hashes;
+	};
+
+	size_t ID;
 
 	std::string path;
 
@@ -136,6 +160,7 @@ private:
 
 	bool bRuntimeCreated;
 
-	static std::map<std::string, std::shared_ptr<SharedAsset>> AssetCache;
+	static std::map<size_t, std::shared_ptr<SharedAsset>> AssetCache;
 
+	static UUIDGenerator gen;
 };

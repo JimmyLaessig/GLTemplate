@@ -14,6 +14,7 @@ add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
 add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR})
 add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR})
 
+
 add_subdirectory(GLTemplate)
 add_subdirectory(example)
 add_subdirectory(test)

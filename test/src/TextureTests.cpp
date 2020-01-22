@@ -2,10 +2,12 @@
 #include "Rendering/GL/GLResourceBackend.h"
 #include "Rendering/Texture2D.h"
 #include <algorithm>
+#include "Application/Log.h"
 
 
 TEST_CASE("Initializing the GpuResourceBackend must return a GLResourceBackend")
 {
+	
 	GpuResourceBackend::init<GLResourceBackend>();
 
 	auto backend = GpuResourceBackend::get();
@@ -17,6 +19,7 @@ TEST_CASE("Initializing the GpuResourceBackend must return a GLResourceBackend")
 	{
 		const glm::u8vec4 defaultColor(255, 0, 255, 255);
 		const glm::u32vec2 size(4, 4);
+
 
 		Texture2D<glm::u8vec4> tex(size, defaultColor);
 		SECTION("The size of of the texture must match")
@@ -38,3 +41,5 @@ TEST_CASE("Initializing the GpuResourceBackend must return a GLResourceBackend")
 		REQUIRE(tex.getBackendTexture());
 	}
 }
+
+

@@ -7,6 +7,19 @@
 #include <mutex>
 
 
+void GLAPIENTRY
+MessageCallback(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar* message,
+	const void* userParam)
+{
+	fprintf(stderr, "OpenGL Error occured: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
+}
 
 
 GLResourceBackend::GLResourceBackend()
@@ -27,6 +40,10 @@ GLResourceBackend::GLResourceBackend()
 	{
 		throw std::exception("Failed to initialize glew!");
 	}
+
+	// During init, enable debug output
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback, 0);
 
 }
 

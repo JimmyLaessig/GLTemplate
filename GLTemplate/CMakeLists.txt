@@ -23,6 +23,7 @@ set (SOURCES
 	${imgui_SOURCE_DIR}/imgui_demo.cpp
 	${imgui_SOURCE_DIR}/examples/imgui_impl_glfw.cpp
 	${imgui_SOURCE_DIR}/examples/imgui_impl_opengl3.cpp
+	${loguru_SOURCE_DIR}/loguru.cpp
 )
 
 
@@ -34,7 +35,7 @@ set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
 
 target_include_directories(${PROJECT} PUBLIC
     include
-	${loguru_SOURCE_DIR}/include
+	${loguru_SOURCE_DIR}
 	${glfw_SOURCE_DIR}/include/GLFW
 	${glew_SOURCE_DIR}/include
 	${assimp_SOURCE_DIR}/include
