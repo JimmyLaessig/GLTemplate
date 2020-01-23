@@ -28,24 +28,24 @@ public:
 	GpuResource& operator=(const GpuResource& other) = delete;
 
 	/**
-	 * Thread-safe wrapper function around freeGpuMemory_Internal() which holds the actual memory-freeing functionalities.
+	 * Thread-safe wrapper function around freeGpuMemoryImpl() which holds the actual memory-freeing functionalities.
 	 * Must be called explicitly (e.g. in descructor of derived class).
 	 */
 	virtual void freeGpuMemory()
 	{
 		gpuResourceLock.lock();
-		freeGpuMemory_Internal();
+		freeGpuMemoryImpl();
 		bIsOutdated = false;
 		gpuResourceLock.unlock();
 	}
 
 	/**
-	 * Thread-safe wrapper function around updateGpuMemory_Internal() which holds the actual update functionalities.
+	 * Thread-safe wrapper function around updateGpuMemoryImpl() which holds the actual update functionalities.
 	 */
 	virtual void updateGpuMemory()
 	{
 		gpuResourceLock.lock();
-		updateGpuMemory_Internal();
+		updateGpuMemoryImpl();
 		bIsOutdated = false;
 		gpuResourceLock.unlock();
 	}
@@ -87,12 +87,12 @@ protected:
 	/**
 	 * Override this function for your custom gpu update code. DO NOT CALL THIS FUNCTION DIRECTLY, use updateGpuMemory() instead.
 	 */
-	virtual void updateGpuMemory_Internal() = 0;
+	virtual void updateGpuMemoryImpl() = 0;
 
 	/**
 	 * Override this function for your custom gpu free code. DO NOT CALL THIS FUNCTION DIRECTLY, use freeGpuMemory() instead.
 	 */
-	virtual void freeGpuMemory_Internal() = 0;
+	virtual void freeGpuMemoryImpl() = 0;
 
 private: 
 
@@ -103,9 +103,9 @@ private:
 
 
 
-class DrawableGpuResource : public GpuResource
-{
-public: 
-	
-	virtual std::function<void()> getDrawCall() const = 0;
-};
+//class DrawableGpuResource : public GpuResource
+//{
+//public: 
+//	
+//	virtual std::function<void()> getDrawCall() const = 0;
+//};

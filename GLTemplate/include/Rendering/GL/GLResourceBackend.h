@@ -18,6 +18,9 @@ public:
 	
 	virtual std::unique_ptr<IBackendIndexedGeometry> createBackendIndexedGeometry(IndexedGeometry* geometry)  override;
 
+	virtual std::unique_ptr<IBackendShader> createBackendShader(Shader * geometry) override;
+
+
 	virtual Renderer* getRenderer() override;
 
 private: 

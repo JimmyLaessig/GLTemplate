@@ -28,12 +28,12 @@
 #include "imgui.h"
 #include "Application/GL/GLWindow.h"
 #include<iostream>
-#include "Rendering/Camera.h"
+#include "Components/Camera.h"
 #include "CameraController.h"
 #include "SharedAsset.h"
-#include "Rendering/Mesh.h"
+#include "Components/Mesh.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/Texture2D.h"
+#include "Components/Texture2D.h"
 
 //#define GLM_FORCE_RADIANS
 //// [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
@@ -99,7 +99,7 @@ int main(int, char**)
 	
 	// Setup mesh
 	
-	auto mesh = SharedAsset::FromFile<Mesh>("Assets/Models/sibenik-cathedral-vray.obj");
+	auto mesh = SharedAsset::FromFile<Mesh, MeshLoader>("Assets/Models/sibenik-cathedral-vray.obj", "");
 	
 	window.OnFrameUpdateDelegate.subscribe([&](float deltaTime)
 	{

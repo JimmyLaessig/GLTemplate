@@ -2,8 +2,12 @@
 #include "Rendering/GL/GLResourceBackend.h"
 #include "Rendering/GL/GLTexture2D.h"
 #include "Rendering/GL/GLIndexedGeometry.h"
+#include "Rendering/GL/GLShader.h"
 #include "Rendering/Renderer.h"  
-#include "Rendering/Texture.h"
+
+#include "Components/Texture.h"
+#include "Components/Shader.h"
+
 #include <mutex>
 
 
@@ -56,6 +60,11 @@ std::unique_ptr<IBackendTexture> GLResourceBackend::createBackendTexture2D(IText
 std::unique_ptr<IBackendIndexedGeometry> GLResourceBackend::createBackendIndexedGeometry(IndexedGeometry * geometry)
 {
 	return std::make_unique<GLIndexedGeometry>(geometry);
+}
+
+std::unique_ptr<IBackendShader> GLResourceBackend::createBackendShader(Shader * geometry)
+{
+	return std::make_unique<GLShader>(geometry);
 }
 
 

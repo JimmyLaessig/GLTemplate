@@ -3,9 +3,12 @@
 #include "Rendering/GL/GLTypeConversion.h"
 #include "Rendering/GL/GLResourceBackend.h"
 #include "Application/GL/GLWindow.h"
-#include "Rendering/Texture2D.h"
+#include "Components/Texture2D.h"
 #include "Rendering/GL/GLTexture2D.h"
+
+
 #include "GLFW/glfw3.h"
+
 using namespace GLTypeConversion;
 
 template<typename T,glm::qualifier Q>
@@ -107,7 +110,7 @@ TEST_CASE("GLTexture2D")
 		const glm::u32vec2 size(4, 4);
 
 		Texture2D<glm::u8vec4> tex(size, defaultColor);
-
+		
 		auto backendTexture = tex.getBackendTexture();
 
 		REQUIRE(backendTexture);

@@ -4,10 +4,12 @@
 
 class ITexture;
 class IndexedGeometry;
+class Shader;
 
 class Renderer;
 class GpuResource;
 
+class IBackendShader;
 class IBackendTexture;
 class IBackendIndexedGeometry;
 
@@ -54,6 +56,9 @@ public:
 
 
 	virtual std::unique_ptr<IBackendIndexedGeometry> createBackendIndexedGeometry(IndexedGeometry* geometry) = 0;
+
+
+	virtual std::unique_ptr<IBackendShader> createBackendShader(Shader * geometry) = 0;
 
 private: 
 

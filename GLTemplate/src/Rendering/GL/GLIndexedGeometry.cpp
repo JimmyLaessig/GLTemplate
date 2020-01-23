@@ -1,4 +1,6 @@
 #include "Rendering/GL/GLIndexedGeometry.h"
+#include "Rendering/GL/GLTypeConversion.h"
+#include "Components/IndexedGeometry.h"
 #include <algorithm>
 #include <assert.h>
 #include <assimp/Importer.hpp>
@@ -6,15 +8,22 @@
 #include <assimp/postprocess.h>
 #include <Stopwatch.h>
 #include <optional>
-#include "Rendering/GL/GLTypeConversion.h"
+
 
 
 GLIndexedGeometry::GLIndexedGeometry(const IndexedGeometry* geometry)
 	: IBackendIndexedGeometry(geometry)
-{}
+{
+	markOutdated();
+}
+
+GLIndexedGeometry::~GLIndexedGeometry()
+{
+	freeGpuMemory();
+}
 
 
-void GLIndexedGeometry::freeGpuMemory_Internal()
+void GLIndexedGeometry::freeGpuMemoryImpl()
 {
 	// Delete previously allocated buffers
 	glDeleteBuffers((GLsizei)VBOs.size(), VBOs.data());
@@ -83,9 +92,9 @@ GLuint createIndexBufferObject(const std::vector<unsigned int>& indices, std::op
 }
 
 
-void GLIndexedGeometry::updateGpuMemory_Internal()
+void GLIndexedGeometry::updateGpuMemoryImpl()
 {
-	freeGpuMemory_Internal();
+	freeGpuMemoryImpl();
 
 	if (glGetError() != GL_NO_ERROR)
 	{

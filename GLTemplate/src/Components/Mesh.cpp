@@ -1,4 +1,4 @@
-#include "Rendering/Mesh.h"
+#include "Components/Mesh.h"
 #include <algorithm>
 #include <assert.h>
 #include <assimp/Importer.hpp>
@@ -9,28 +9,34 @@
 #include "Rendering/GpuResourceBackend.h"
 #include "Rendering/GL/GLResourceBackend.h"
 
-bool Mesh::load()
+
+IndexedGeometry* Mesh::addSubMesh(const IndexedGeometryData& vertexData, Material * material)
 {
-	
+	return this->subMeshes.emplace_back(std::make_unique<IndexedGeometry>(vertexData, material)).get(); 
+}
+
+
+IndexedGeometry* Mesh::addSubMesh(IndexedGeometryData&& vertexData, Material * material)
+{
+	return this->subMeshes.emplace_back(std::make_unique<IndexedGeometry>(vertexData, material)).get();
+}
+
+
+bool MeshLoader::Load(Mesh* mesh, const std::string_view path)
+{
 	static_assert(sizeof(glm::vec3) == sizeof(aiVector3D));
 	static_assert(sizeof(glm::vec4) == sizeof(aiColor4D));
-	
+
 	Assimp::Importer importer;
-	
-	if (auto pScene = importer.ReadFile(getAssetPath().c_str(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace))
+
+	if (auto pScene = importer.ReadFile(path.data(), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace))
 	{
-		this->subMeshes.clear();
-		//this->subMeshes = std::set<SubMesh>(pScene->mNumMeshes);
-		
-		uint64_t alloc = 0;
-		uint64_t populate = 0;
-		
+		mesh->subMeshes.clear();
+
 		for (auto i = 0u; i < pScene->mNumMeshes; i++)
 		{
+			auto aiMesh = pScene->mMeshes[i];
 			
-			auto aiMesh			= pScene->mMeshes[i];
-			stopwatch::Stopwatch sw;
-			sw.start();
 			IndexedGeometryData vertexData;
 			vertexData.positions.resize(aiMesh->mNumVertices);
 			vertexData.normals.resize(aiMesh->mNumVertices);
@@ -44,9 +50,6 @@ bool Mesh::load()
 			}
 			vertexData.indices.resize(aiMesh->mNumFaces * 3u);
 
-			alloc += sw.elapsed();
-			sw.start();
-			
 			if (aiMesh->HasPositions())
 			{
 				std::memcpy(vertexData.positions.data(), aiMesh->mVertices, aiMesh->mNumVertices * sizeof(glm::vec3));
@@ -73,49 +76,19 @@ bool Mesh::load()
 			{
 				auto& face = aiMesh->mFaces[fi];
 				assert(face.mNumIndices == 3);
-				vertexData.indices[fi * 3 ]		= (face.mIndices[0]);
-				vertexData.indices[fi * 3 + 1]	= (face.mIndices[1]);
-				vertexData.indices[fi * 3 + 2]	= (face.mIndices[2]);
-				//std::memcpy(&vertexData.indices[fi], face.mIndices, 3 * sizeof(unsigned int));
+				vertexData.indices[fi * 3] = (face.mIndices[0]);
+				vertexData.indices[fi * 3 + 1] = (face.mIndices[1]);
+				vertexData.indices[fi * 3 + 2] = (face.mIndices[2]);
 			}
-
-			addSubMesh(std::move(vertexData), nullptr);
-			
-			populate += sw.elapsed();
+			mesh->addSubMesh(std::move(vertexData), nullptr);
 		}
 
-		//std::cout << "populate took " << populate << "ms. " << std::endl;
-		return true;	
-	}	
+		return true;
+	}
 	else
 	{
-		std::cerr << "Failed to load mesh from '" << getAssetPath() << "'. Assimp error: " << importer.GetErrorString() << std::endl;;
+		std::cerr << "Failed to load mesh from '" << path.data() << "'. Assimp error: " << importer.GetErrorString() << std::endl;;
 	}
 
 	return false;
-}
-
-
-bool Mesh::reload()
-{
-	return true;
-}
-
-
-IndexedGeometry* Mesh::addSubMesh(const IndexedGeometryData& vertexData, Material * material)
-{
-	//auto geom = dynamic_cast<GLResourceBackend*>(GpuResourceBackend::get())->createIndexedGeometry(vertexData, material);
-
-
-	return nullptr;
-
-
-	//return this->subMeshes.emplace_back(GpuResourceBackend::get()->createIndexedGeometry(vertexData, material)).get();
-}
-
-
-IndexedGeometry* Mesh::addSubMesh(IndexedGeometryData&& vertexData, Material * material)
-{
-	//return this->subMeshes.emplace_back(GpuResourceBackend::get()->createIndexedGeometry(std::move(vertexData), material)).get();
-	return nullptr;
 }

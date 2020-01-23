@@ -1,7 +1,9 @@
 #pragma once
 
 #include "GpuResource.h"
-#include "Material.h"
+
+// Forward declaration of IndexedGeometry, since IndexedGeometry holds a unique_ptr to IBackendIndexedGeometry
+class IndexedGeometry;
 
 
 class IBackendIndexedGeometry : public GpuResource

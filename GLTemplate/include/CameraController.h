@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "Rendering/Camera.h"
+#include "Components/Camera.h"
 
 
 class CameraController

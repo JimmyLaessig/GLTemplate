@@ -1,27 +1,37 @@
 #pragma once
 
-#include "Rendering/Texture.h"
+#include "Components/Texture.h"
 #include "VectorMath.h"
-#include "Rendering/BackendTexture.h"
+#include "Rendering/GpuTexture.h"
 
+//enum class TextureFormat
+//{
+//	RED,
+//	RG,
+//	RGB,
+//	RGBA,
+//	DEPTH,
+//	DEPTH_STENCIL
+//}
 
 
 template<class PixelType>
 class Texture2D : public ITexture
 {
+	
 public:
 
-	Texture2D(const glm::u32vec2& size, const std::vector<PixelType>& textureData) 
-		: ITexture()	
+	Texture2D(const glm::u32vec2& size, const std::vector<PixelType>& textureData) : 
+		ITexture(),	
+		backendTexture(GpuResourceBackend::get()->createBackendTexture2D(this))
 	{
-		this->backendTexture = GpuResourceBackend::get()->createBackendTexture2D(this);
 		setTextureData(size, textureData);	
 	}
 
-	Texture2D(const glm::u32vec2& size, PixelType defaultValue) 
-		: ITexture()
+	Texture2D(const glm::u32vec2& size, PixelType defaultValue) : 
+		ITexture(),
+		backendTexture(GpuResourceBackend::get()->createBackendTexture2D(this))
 	{
-		this->backendTexture = GpuResourceBackend::get()->createBackendTexture2D(this);
 		setTextureData(size, defaultValue);
 	}
 
@@ -94,3 +104,8 @@ protected:
 
 	std::unique_ptr<IBackendTexture> backendTexture;
 };
+
+
+
+
+

@@ -5,7 +5,7 @@
 #include "GL/glew.h"
 #include "glm/glm.hpp"
 #include "VectorMath.h"
-#include "Rendering/Texture.h"
+#include "Components/Texture.h"
 
 namespace GLTypeConversion
 {

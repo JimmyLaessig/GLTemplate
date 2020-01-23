@@ -1,4 +1,4 @@
-#include "Rendering/Camera.h"
+#include "Components/Camera.h"
 
 
 Camera::Camera(const Camera & other)

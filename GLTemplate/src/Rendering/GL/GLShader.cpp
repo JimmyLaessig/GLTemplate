@@ -1,5 +1,6 @@
 #include "Rendering/GL/GLShader.h"
-#include "Rendering/GL/GLShaderLoader.h"
+#include "Rendering/GL/GLSLShaderParser.h"
+#include "Components/Shader.h"
 
 #include <iostream>
 #include <sstream>
@@ -11,13 +12,13 @@ GLSLShaderStageData::GLSLShaderStageData(
 	std::string_view geometryShaderCode,
 	std::string_view tessellationEvalShaderCode,
 	std::string_view tessellationControlShaderCode,
-	std::string_view computeShaderCode)
-	: vertexShaderCode(vertexShaderCode),
-	fragmentShaderCode(fragmentShaderCode),
-	geometryShaderCode(geometryShaderCode),
-	tessellationEvalShaderCode(tessellationEvalShaderCode),
-	tessellationControlShaderCode(tessellationControlShaderCode),
-	computeShaderCode(computeShaderCode)
+	std::string_view computeShaderCode) : 
+		vertexShaderCode(vertexShaderCode),
+		fragmentShaderCode(fragmentShaderCode),
+		geometryShaderCode(geometryShaderCode),
+		tessellationEvalShaderCode(tessellationEvalShaderCode),
+		tessellationControlShaderCode(tessellationControlShaderCode),
+		computeShaderCode(computeShaderCode)
 {}
 
 
@@ -34,7 +35,7 @@ void GLShader::setShaderStageData(const GLSLShaderStageData & shaderStageData)
 }
 
 
-void GLShader::freeGpuMemory_Internal()
+void GLShader::freeGpuMemoryImpl()
 {
 	glDeleteProgram(programHandle);
 	glDeleteShader(vertexStage);
@@ -49,9 +50,11 @@ void GLShader::freeGpuMemory_Internal()
 
 
 
-void GLShader::updateGpuMemory_Internal()
+void GLShader::updateGpuMemoryImpl()
 {
 	programHandle = glCreateProgram();
+
+	GLSLShaderStageData shaderStageData = GLSLShaderParser::Parse(shader->getShaderCode());
 
 	vertexStage					= compileGLShaderProgram(shaderStageData.vertexShaderCode.c_str(), GL_VERTEX_SHADER).value_or(0);
 	fragmentStage				= compileGLShaderProgram(shaderStageData.fragmentShaderCode.c_str(), GL_FRAGMENT_SHADER).value_or(0);
@@ -80,7 +83,7 @@ void GLShader::updateGpuMemory_Internal()
 		glGetProgramInfoLog(programHandle, logSize, NULL, msg.data());
 
 		std::cerr << "Failed to link Shader Program: " << msg.c_str() << std::endl;
-		freeGpuMemory_Internal();
+		freeGpuMemoryImpl();
 	}
 }
 

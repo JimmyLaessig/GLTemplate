@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Rendering/GL/GLTypeConversion.h"
-#include "Rendering/BackendTexture.h"
+#include "Rendering/GpuTexture.h"
 
 
 class GLTexture2D : public IBackendTexture
@@ -22,9 +22,9 @@ public:
 	/**
 	 *
 	 */
-	virtual void updateGpuMemory_Internal() override
+	virtual void updateGpuMemoryImpl() override
 	{
-		freeGpuMemory_Internal();
+		freeGpuMemoryImpl();
 
 		bool err = glGetError() == GL_NO_ERROR;
 
@@ -54,7 +54,7 @@ public:
 	/**
 	 *
 	 */
-	virtual void freeGpuMemory_Internal() override
+	virtual void freeGpuMemoryImpl() override
 	{
 		glDeleteTextures(1, &handle);
 	}

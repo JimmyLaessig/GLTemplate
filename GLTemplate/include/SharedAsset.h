@@ -8,37 +8,11 @@
 
 #include "Application/Log.h"
 
-
-
 class SharedAsset
 {
 public: 	
 
-	/**
-	 * Factory method that creates a runtime asset with the given ID, or returns the cached asset if exists.
-	 * If the object failed to create or an object with the same ID with a different type exists in the cache, nullptr is returned.
-	 */
-	template<class T>
-	static std::shared_ptr<T> New(const std::string_view name = "")
-	{
-		return ConsctructSharedAsset<T>(name);
-	}
-
-	/**
-	 * Factory method that creates a new asset from a file or returns the asset from the cache if the file was loaded previously.
-	 * The unique ID of the object will be derived from the path field. If the provided ID field is not an empty string, the ID field will be used as id instead. 
-	 * If the object is created for the first time, the load function will be executed. If load failes, the object is discarded and nullptr is returned.
-	 */
-	template<class T>
-	static std::shared_ptr<T> FromFile(const std::string_view path, const std::string_view name = "")
-	{
-		return ConsctructSharedAsset<T>(name == "" ? path : name, path);
-	}
-
-	/**
-	 * Do not create SharedAssets directy, use the static factory functions instead.
-	 */
-	SharedAsset() = default;
+	virtual ~SharedAsset() = default;
 
 	/**
 	 * Delete the copy constructor.
@@ -46,53 +20,55 @@ public:
 	SharedAsset(const SharedAsset& other) = delete;
 
 	/**
-	 * Returns the path to the file of the asset.
-	 */
-	const std::string& getAssetPath() const
-	{
-		return path;
-	}
-
-	/**
 	 * Returns the ID of the asset.
 	 */
-	const size_t& getID() const
+	virtual const size_t& getID() const
 	{
 		return ID;
 	}
 
 	/**
-	 * Indicates whether or not the asset was created during runtime or loaded from file.
+	 * Returns the human-readable name of the asset.
 	 */
-	bool isRuntimeCreated() const
+	virtual const std::string_view getName() const
 	{
-		return bRuntimeCreated;
+		return name;
 	}
 
-	/**
-	 * Loads the asset from the path.
-	 */
-	virtual bool load() = 0;
 
-	/**
-	 * Reloads the asset from the file path.
-	 */
-	virtual bool reload() = 0;
+protected: 
+
+	SharedAsset() = default;
 
 private:
 
-
-
-
+	
+	/**
+	 * The unique ID of the asset.
+	 */
+	size_t ID;
 
 	/**
-	 * Constructs the SharedAsset object of derived type T with the given id and path.
-	 * If the path argument is an empty string, a runtime object will be created. 
+	 * The (readable) name of the asset.
 	 */
-	template<class T>
-	static std::shared_ptr<T> ConsctructSharedAsset(const std::string_view name, const std::string_view path = "")
+	std::string name;
+
+public: 
+
+	/**
+	 * Factory method that creates a runtime asset with the given name or returns the cached instance.
+	 * If the asset with the same name was creted previously, the cached instances is returned.
+	 * If the cached asset#s type is not T nullptr is returned.
+	 */
+	template<class T, class ...Args>
+	static std::shared_ptr<T> New(const std::string_view name, Args... args)
 	{
-		auto ID = gen(name);
+		// Construct an alternative name of the object
+		std::string alterativeName = std::string(typeid(T).name()) + "_" + std::to_string(NumSharedAssetsCreated);
+
+		// Create the (hopefully) unique ID from either the name (if set) or the class name + a global counter
+		size_t ID = std::hash<const char*>()(name.empty() ? alterativeName.data() : name.data());
+
 		// Return cached element
 		if (AssetCache.count(ID))
 		{
@@ -104,8 +80,7 @@ private:
 			// Else, log the error and return nullptr.
 			else
 			{
-				
-				std::cerr << "Type Conflict: An object with ID=" << ID << " already exists in the cache. Target type: " 
+				std::cerr << "Type Conflict: An object with ID=" << ID << " already exists in the cache. Target type: "
 					<< typeid(T).name() << ", found type: " << typeid(*AssetCache[ID].get()).name() << "." << std::endl;
 
 				return nullptr;
@@ -113,54 +88,69 @@ private:
 		}
 
 		// Construct element in cache
-		auto asset				= std::make_shared<T>();
-		asset->name				= name .empty() ? path : name;
-		asset->ID				= ID;
-		asset->path				= path;
-		asset->bRuntimeCreated	= path.empty();
 		
-		// Call the load function on non-runtime objects.
-		if (!asset->bRuntimeCreated)
-		{
-			if (!asset->load())
-			{
-				std::cerr << "Error loading object ID=" << asset->ID << " from " << path << "." << std::endl;
-				return nullptr;
-			}
-		}
+		auto asset = std::shared_ptr<T>(new T(args...));
+		asset->name = name;
+		asset->ID = ID;
 
+		NumSharedAssetsCreated++;
 		// Push the element to the cache if loading was successfull. 
-		AssetCache[ asset->ID] = asset;
+		AssetCache[asset->ID] = asset;
 
 		return asset;
 	}
 
-
-private:	
-
-	struct UUIDGenerator
+	/**
+	 * Factory method that creates a new asset from a file using the prebuild factory classed.
+	 * See FromFile<T, TLoader> for more information.
+	 */
+	template<class T, class ...Args>
+	static std::shared_ptr<T> FromFile(const std::string_view path, const std::string_view name, Args... args)
 	{
-	public:
+		T::no_implementation;
+	}
 
-		size_t operator()(const std::string_view s);
+	/**
+	 * Factory method that creates a new asset from a file  using the provided Factory class.
+	 * If the file was loaded previously, the cached instances is returned.
+	 * If the cached asset is of other type than T nullptr is returned.
+	 * If the factory method fails to load a nullptr is returned.
+	 */
+	template<class T, class TLoader, class ...Args>
+	static std::shared_ptr<T> FromFile(const std::string_view path, const std::string_view name, Args... args)
+	{
+		if (auto asset = New<T>(path))
+		{
+			asset->name = name;
+			
+			if (TLoader::Load(asset.get(), path))
+			{
+				return asset;
+			}
+			else
+			{
+				std::cerr << "Error loading object ID=" << asset->ID << " from " << path << "." << std::endl;
+				AssetCache.erase(asset->ID);
+				return nullptr;
+			}
+		}
+		else
+		{
+			return {};
+		}
+	
+	}
 
+private: 
 
-		size_t operator()();
-
-	private:
-
-		std::set<size_t> hashes;
-	};
-
-	size_t ID;
-
-	std::string path;
-
-	std::string name;
-
-	bool bRuntimeCreated;
-
+	/**
+	 * Holds all created assets.
+	 */
 	static std::map<size_t, std::shared_ptr<SharedAsset>> AssetCache;
 
-	static UUIDGenerator gen;
+	/**
+	 * Counts the total number of created assets.
+	 */
+	static size_t NumSharedAssetsCreated;
 };
+
