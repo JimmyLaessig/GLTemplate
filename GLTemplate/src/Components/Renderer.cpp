@@ -113,7 +113,7 @@ void Renderer::executeRenderJobs(const RenderView & view)
 }
 
 
-RenderObject::RenderObject(IndexedGeometry * drawable, Transform transform, IShader * shader, UniformCollection * uniforms, int renderPass):
+RenderObject::RenderObject(IndexedGeometry * drawable, Transform transform, Shader * shader, UniformCollection * uniforms, int renderPass):
 	geometry(geometry),
 	transform(transform),
 	shader(shader),

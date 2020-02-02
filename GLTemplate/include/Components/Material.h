@@ -1,10 +1,10 @@
 #pragma once
-#include "Shader.h"
+//#include "Shader.h"
 
 
 class Material
 {
 public: 
-	IShader* shader;
+	//Shader* shader;
 	//UniformCollection* uniformBuffer;
 };

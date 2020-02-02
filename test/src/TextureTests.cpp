@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 #include "Rendering/GL/GLResourceBackend.h"
-#include "Rendering/Texture2D.h"
+#include "Components/Texture2D.h"
 #include <algorithm>
 #include "Application/Log.h"
 

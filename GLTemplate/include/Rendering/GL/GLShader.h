@@ -1,8 +1,11 @@
 #pragma once
-#include "Rendering/Shader.h"
-#include "Rendering/GL/GL.h"
 #include <optional>
+
+#include "Rendering/GL/GL.h"
 #include "Rendering/GL/GLTexture2D.h"
+
+#include "Rendering/GpuShader.h"
+
 
 /**
  * Templated function that returns the proper glUniform function for the UniformType. 
@@ -58,7 +61,6 @@ template<> constexpr auto getUniformFunction<glm::uvec3>()	{ return glUniform3ui
 template<> constexpr auto getUniformFunction<glm::uvec4>()	{ return glUniform4uiv; }
 
 
-
 struct GLSLShaderStageData
 {
 	GLSLShaderStageData() = default;
@@ -86,13 +88,20 @@ struct GLSLShaderStageData
 };
 
 
-class GLShader : public IShader
+class GLShader : public IBackendShader
 {
 private: 
 
 	GLSLShaderStageData shaderStageData;
 
 public:
+
+	GLShader(const Shader* shader) :
+		IBackendShader(shader)
+	{
+		markOutdated();
+	}
+
 
 	GLuint programHandle			= 0;
 	GLuint vertexStage				= 0;
@@ -110,12 +119,6 @@ public:
 	void setShaderStageData(const GLSLShaderStageData& shaderStageData);
 
 
-	virtual bool load() override;
-
-
-	virtual bool reload() override;
-
-
 	virtual void bind()
 	{
 		glUseProgram(programHandle);
@@ -129,10 +132,10 @@ public:
 
 protected: 
 
-	virtual void freeGpuMemory_Internal() override;
+	virtual void freeGpuMemoryImpl() override;
 
 
-	virtual void updateGpuMemory_Internal() override;
+	virtual void updateGpuMemoryImpl() override;
 
 	/**
 	 * Binds a single vec2/3/4 to the shader location.
@@ -214,6 +217,13 @@ protected:
 	{
 		getUniformFunction<T>()(location, (GLsizei)std::size(values), values.data());
 	}
+
+	//template <class T>
+	//void binUniformBuffer(int location, const T& buffer)
+	//{
+	//	//glUniformBufferEXT(this->programHandle, location, );
+	//}
+
 
 	/**
 	 * Binds a Texture2D to the shader location.

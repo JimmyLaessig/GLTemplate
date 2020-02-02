@@ -1,20 +1,21 @@
 #pragma once
 
-#include "GpuResource.h"
 #include "Material.h"
-
+#include "Rendering/GpuIndexedGeometry.h"
+#include <vector>
+#include "VectorMath.h"
 
 struct IndexedGeometryData
 {
 	IndexedGeometryData() = default;
 
-	IndexedGeometryData(const IndexedGeometryData& other);
+	IndexedGeometryData(const IndexedGeometryData& other) = default;
 
-	IndexedGeometryData(IndexedGeometryData&& other);
+	IndexedGeometryData(IndexedGeometryData&& other) = default;
 
-	IndexedGeometryData& operator=(const IndexedGeometryData& other);
+	IndexedGeometryData& operator=(const IndexedGeometryData& other) = default;
 
-	IndexedGeometryData& operator=(IndexedGeometryData&& other);
+	IndexedGeometryData& operator=(IndexedGeometryData&& other) = default;
 
 	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> normals;
@@ -28,7 +29,7 @@ struct IndexedGeometryData
 
 
 
-class IndexedGeometry : public DrawableGpuResource
+class IndexedGeometry
 {
 public:
 	friend class Mesh;
@@ -39,18 +40,12 @@ public:
 	/**
 	 *
 	 */
-	IndexedGeometry(const IndexedGeometryData& vertexData, Material * material);
+	IndexedGeometry(const IndexedGeometryData& vertexData, Material * material, const std::string_view name = "");
 
 	/**
 	 *
 	 */
-	IndexedGeometry(IndexedGeometryData&& vertexData, Material * material);
-
-
-	//SubMesh(SubMesh&& other) noexcept;
-
-
-	virtual ~IndexedGeometry();
+	IndexedGeometry(IndexedGeometryData&& vertexData, Material * material, const std::string_view name = "");
 
 
 	/**
@@ -77,9 +72,13 @@ public:
 
 protected:
 
-	std::string name = "";
+	std::string name;
 
-	IndexedGeometryData vertexData = {};
+	IndexedGeometryData vertexData;
 
-	Material* material = nullptr;
+	Material* material;
+
+private: 
+
+	std::unique_ptr<IBackendIndexedGeometry> backendIndexedGeometry;
 };

@@ -1,9 +1,8 @@
 #pragma once
-
-#include "Rendering/Mesh.h"
 #include "Rendering/GL/GL.h"
-#include "Rendering/BackendIndexedGeometry.h"
+#include "Rendering/GpuIndexedGeometry.h"
 
+class IndexedGeometry;
 
 /**
  *
@@ -14,6 +13,9 @@ public:
 
 
 	GLIndexedGeometry(const IndexedGeometry* geometry);
+
+
+	virtual ~GLIndexedGeometry();
 
 
 	/**
@@ -50,13 +52,13 @@ protected:
 	 * @brief
 	 *
 	 */
-	virtual void freeGpuMemory_Internal() override;
+	virtual void freeGpuMemoryImpl() override;
 
 	/**
 	 * @brief
 	 *
 	 */
-	virtual void updateGpuMemory_Internal() override;
+	virtual void updateGpuMemoryImpl() override;
 
 
 private:

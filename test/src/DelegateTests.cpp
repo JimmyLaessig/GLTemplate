@@ -1,6 +1,9 @@
 #include <catch2/catch.hpp>
 #include "Application/Delegates.h"
-
+#include "SharedAsset.h"
+#include <set>
+#include <random>
+#include <uuid.h>
 
 TEST_CASE("Subscribing to delegates...")
 {
@@ -58,3 +61,29 @@ TEST_CASE("Subscribing to delegates...")
 }
 
 
+
+
+TEST_CASE("UUIDGenerator Tests")
+{
+	//std::string a = "a";
+	//auto ptr = a.data();
+
+	
+	//std::mt19937_64 gen(seed);
+	//auto uuidGen = uuids::uuid_random_generator_
+
+	
+	//auto seed_data = std::array<size_t, std::mt19937::state_size> {};
+	//std::generate(std::begin(seed_data), std::end(seed_data), std::ref(rd));
+	//std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
+	//std::mt19937 generator(seq);
+	//uuid const guid = uuids::uuid_random_generator{ generator }();
+
+
+
+	//UUIDGenerator g;
+	//for (int i = 0; i < 1000000;i++)
+	//{
+	//	g();
+	//}
+}

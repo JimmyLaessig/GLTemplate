@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GpuResource.h"
+#include "Rendering/GpuResource.h"
 #include "VectorMath.h"
 
 
