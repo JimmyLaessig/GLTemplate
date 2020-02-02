@@ -23,12 +23,6 @@ public:
 
 
 	void setCamera(Camera* camera);
-
-
-	
-	
-
-	
 	
 
 	void update(float deltaTime);
