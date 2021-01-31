@@ -10,3 +10,4 @@
 !ThirdParty.cmake
 !CMakeLists.txt
 !.gitignore
+!cmake/*
