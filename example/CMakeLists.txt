@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.3)
 
-set(PROJECT Example)
-project(${PROJECT})
+cmake_minimum_required(VERSION 3.3)
+include(GNUInstallDirs)
+
+set(TARGET_NAME Example)
 
 
 # Whenever this glob's value changes, cmake will rerun and update the build with the
@@ -18,20 +19,28 @@ set (SOURCES
 	${headers}
 )
 
-add_executable(${PROJECT} ${SOURCES})
+add_executable(${TARGET_NAME} ${SOURCES})
 
-set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${TARGET_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$(Configuration)")
 
-set_property(TARGET ${PROJECT} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$(Configuration)")
+#find_package(EngineName REQUIRED)
 
-set(LIBRARIES
-    GLTemplate
-)
+target_link_libraries(${TARGET_NAME} EngineName)
 
-target_link_libraries(${PROJECT} ${LIBRARIES})
+#find_package(Common CONFIG REQUIRED)
+#message(ERROR ${Common_LIBRARIES})
+#set(LIBRARIES
+#    ${Common_LIBRARIES}
+#)
+
+#target_include_directories(${LIBRARY_NAME} PRIVATE#
+#	${Common_INCLUDE_DIRS}
+#)
+
+#target_link_libraries(${LIBRARY_NAME} ${LIBRARIES})
 
 
-add_custom_command(TARGET ${PROJECT} POST_BUILD        
-   COMMAND ${CMAKE_COMMAND} -E copy_directory		
-	${CMAKE_SOURCE_DIR}/Assets/
-	$<TARGET_FILE_DIR:Example>/Assets/)
+#add_custom_command(TARGET ${LIBRARY_NAME} POST_BUILD        
+#   COMMAND ${CMAKE_COMMAND} -E copy_directory		#
+#	${CMAKE_SOURCE_DIR}/Assets/
+#	$<TARGET_FILE_DIR:Example>/Assets/)

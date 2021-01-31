@@ -1,28 +1,33 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.15)
 
-set(THIRDPARTY_BASE_DIR ${PROJECT_SOURCE_DIR}/thirdParty)
-### dependencies
-include(ThirdParty.cmake)
+project(GLTemplate)
 
+include(cmake/ShaderCompiler.cmake)
 
-set_property(TARGET ${PROJECT} PROPERTY CXX_STANDARD 17)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+include(cmake/Conan.cmake)
 
+conan_install()
 
+message(WARNING ${DXC_EXECUTABLE} )
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
-add_subdirectory(${glew_SOURCE_DIR} ${glew_BINARY_DIR})
-add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR})
-
+#set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(GLTemplate)
 add_subdirectory(example)
 add_subdirectory(test)
 
-set_target_properties("libglew_static" PROPERTIES FOLDER "glew")
-set_target_properties("libglewmx_static" PROPERTIES FOLDER "glew")
-set_target_properties("assimp" PROPERTIES FOLDER "assimp")
-set_target_properties("IrrXML" PROPERTIES FOLDER "assimp")
-set_target_properties("UpdateAssimpLibsDebugSymbolsAndDLLs" PROPERTIES FOLDER "assimp")
-set_target_properties("zlib" PROPERTIES FOLDER "assimp")
-set_target_properties("zlibstatic" PROPERTIES FOLDER "assimp")
+
+#set(THIRDPARTY_BASE_DIR ${PROJECT_SOURCE_DIR}/thirdParty)
+### dependencies
+#include(ThirdParty.cmake)
+
+
+#set_target_properties("libglew_static" PROPERTIES FOLDER "glew")
+#set_target_properties("libglewmx_static" PROPERTIES FOLDER "glew")
+#set_target_properties("assimp" PROPERTIES FOLDER "assimp")
+#set_target_properties("IrrXML" PROPERTIES FOLDER "assimp")
+#set_target_properties("UpdateAssimpLibsDebugSymbolsAndDLLs" PROPERTIES FOLDER "assimp")
+#set_target_properties("zlib" PROPERTIES FOLDER "assimp")
+#set_target_properties("zlibstatic" PROPERTIES FOLDER "assimp")
